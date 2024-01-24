@@ -59,13 +59,6 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     emit TokenMintedAndApproved(_token, _approveAddress, _amount);
   }
 
-  function lockProject(address _address) public OnlyOwner {
-    IRahatProject(_address).lockProject();
-  }
-
-  function unlockProject(address _address) public OnlyOwner {
-    IRahatProject(_address).unlockProject();
-  }
 
   function addTokenOwner(address _token, address _ownerAddress) public OnlyOwner {
     RahatToken(_token).addOwner(_ownerAddress);

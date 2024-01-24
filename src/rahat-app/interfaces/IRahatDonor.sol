@@ -12,7 +12,4 @@ interface IRahatDonor is IERC165 {
 
   function addTokenOwner(address _token, address _ownerAddress) external;
 
-  function lockProject(address _address) external;
-
-  function unlockProject(address _address) external;
 }
