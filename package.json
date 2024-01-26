@@ -1,7 +1,7 @@
 {
-  "name": "@rahat-rumsan/contracts",
+  "name": "@rahat-el/contracts",
   "version": "0.1.100",
-  "description": "Rahat smart contracts",
+  "description": "Rahat EL smart contracts",
   "author": "https://rumsan.com",
   "homepage": "https://github.com/rahat-rumsan/contracts",
   "scripts": {
@@ -12,16 +12,16 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@nomiclabs/hardhat-ethers": "2.2.3",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^4.8.0",
-    "chai": "^4.3.7",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.12.4",
+    "@openzeppelin/contracts": "5.0.1",
+    "chai": "4.4.1",
+    "ethers": "6.10.0",
+    "hardhat": "2.19.4",
     "prettier": "^2.8.3",
     "prettier-plugin-solidity": "^1.1.1",
-    "solidity-coverage": "^0.8.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "solidity-coverage": "0.8.5",
+    "@nomiclabs/hardhat-waffle": "2.0.6",
     "ethereum-waffle": "^3.4.4"
   }
 }
