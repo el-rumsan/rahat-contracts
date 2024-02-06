@@ -6,16 +6,15 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Multicall.sol';
 
 import '../interfaces/IRahatProject.sol';
-import '../interfaces/IRahatCommunity.sol';
 
-abstract contract AbstractProject is IRahatProject, Multicall {
+abstract contract AbstractProject is  Multicall {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   // #region ***** Events *********//
   event BeneficiaryAdded(address indexed);
   event BeneficiaryRemoved(address indexed);
-  event ProjectLocked();
-  event ProjectUnlocked();
+  // event ProjectLocked();
+  // event ProjectUnlocked();
 
   event TokenRegistered(address indexed tokenAddress);
   event TokenBudgetIncrease(address indexed tokenAddress, uint amount);
@@ -25,48 +24,53 @@ abstract contract AbstractProject is IRahatProject, Multicall {
   // #endregion
 
   // #region ***** Variables *********//
-  bool internal _permaLock;
+  bool internal _closed;
   mapping(address => uint) private _tokenBudget;
   mapping(address => bool) private _registeredTokens;
 
-  string public override name;
-  bool public override isLocked;
+  string public  name;
+  // bool public override isLocked;
 
-  IRahatCommunity public RahatCommunity;
+  // IRahatCommunity public RahatCommunity;
   EnumerableSet.AddressSet internal _beneficiaries;
 
   // #endregion
 
-  constructor(string memory _name, address _community) {
+  constructor(string memory _name) {
     name = _name;
-    RahatCommunity = IRahatCommunity(_community);
+    // RahatCommunity = IRahatCommunity(_community);
   }
 
-  // #region ***** Modifiers *********//
-  modifier onlyUnlocked() {
-    require(!isLocked, 'project locked');
-    _;
-  }
+  // // #region ***** Modifiers *********//
+  // modifier onlyUnlocked() {
+  //   require(!isLocked, 'project locked');
+  //   _;
+  // }
 
-  modifier onlyLocked() {
-    require(isLocked, 'project unlocked');
+  // modifier onlyLocked() {
+  //   require(isLocked, 'project unlocked');
+  //   _;
+  // }
+
+  modifier onlyOpen(){
+    require(!_closed,'Project closed');
     _;
   }
 
   // #endregion
 
-  // #region ***** Project Functions *********//
-  function _lockProject() internal {
-    require(_beneficiaries.length() > 0, 'no beneficiary');
-    isLocked = true;
-    emit ProjectLocked();
-  }
+  // // #region ***** Project Functions *********//
+  // function _lockProject() internal {
+  //   require(_beneficiaries.length() > 0, 'no beneficiary');
+  //   isLocked = true;
+  //   emit ProjectLocked();
+  // }
 
-  function _unlockProject() internal {
-    require(!_permaLock, 'locked permanently');
-    isLocked = false;
-    emit ProjectUnlocked();
-  }
+  // function _unlockProject() internal {
+  //   require(!_permaLock, 'locked permanently');
+  //   isLocked = false;
+  //   emit ProjectUnlocked();
+  // }
 
   // #endregion
 
@@ -80,7 +84,7 @@ abstract contract AbstractProject is IRahatProject, Multicall {
   }
 
   function _addBeneficiary(address _address) internal {
-    require(RahatCommunity.isBeneficiary(_address), 'not valid ben');
+    // require(RahatCommunity.isBeneficiary(_address), 'not valid ben');
     if (!_beneficiaries.contains(_address)) emit BeneficiaryAdded(_address);
     _beneficiaries.add(_address);
   }
@@ -113,7 +117,7 @@ abstract contract AbstractProject is IRahatProject, Multicall {
   }
 
   function _acceptToken(address _tokenAddress, address _from, uint256 _amount) internal {
-    require(RahatCommunity.isProject(address(this)), 'project not approved');
+    // require(RahatCommunity.isProject(address(this)), 'project not approved');
 
     IERC20(_tokenAddress).transferFrom(_from, address(this), _amount);
     _tokenBudgetIncrease(_tokenAddress, _amount);
@@ -121,17 +125,17 @@ abstract contract AbstractProject is IRahatProject, Multicall {
   }
 
   function _withdrawToken(address _tokenAddress, uint _amount) internal {
-    IERC20(_tokenAddress).transfer(address(RahatCommunity), _amount);
+    // IERC20(_tokenAddress).transfer(address(RahatCommunity), _amount);
     _tokenBudgetDecrease(_tokenAddress, _amount);
 
-    emit TokenTransfer(_tokenAddress, address(RahatCommunity), _amount);
+    // emit TokenTransfer(_tokenAddress, address(RahatCommunity), _amount);
   }
 
   // #endregion
 
-  // #region ***** Misc Functions *********//
-  function community() public view virtual returns (address) {
-    return address(RahatCommunity);
-  }
-  // #endregion
+  // // #region ***** Misc Functions *********//
+  // function community() public view virtual returns (address) {
+  //   return address(RahatCommunity);
+  // }
+  // // #endregion
 }

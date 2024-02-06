@@ -10,34 +10,39 @@ interface IELProject is IERC165 {
 
   function removeBeneficiary(address _address) external;
 
-  function isBeneficiary(address _address) external view returns (bool);
+  // function isBeneficiary(address _address) external view returns (bool);
 
-  function beneficiaryCount() external view returns (uint256);
+  // function beneficiaryCount() external view returns (uint256);
 
   function otpServerAddress() external returns (address);
  
-  function beneficiaryClaims(address _address) external returns (uint);
+  // function beneficiaryClaims(address _address) external returns (uint);
 
   ///@dev Add beneficiary to project with claim amount;
-  function assignClaims(address _address, uint _claimAmount) external;
+  function assignClaims(address _address) external;
 
-  function totalClaimsAssgined() external view returns (uint _totalClaims);
+  function assignRefereedClaims(address _address, address _tokenAddress) external;
 
-   function withdrawToken(address _token) external;
+  // function totalClaimsAssgined() external view returns (uint _totalClaims);
 
-  function createAllowanceToVendor(address _address, uint256 _amount) external;
+  //  function withdrawToken(address _token) external;
 
-  function acceptAllowanceByVendor(uint256 _amount) external;
+  // function createAllowanceToVendor(address _address, uint256 _amount) external;
+
+  // function acceptAllowanceByVendor(uint256 _amount) external;
 
   ///@dev Request For tokens From Beneficay by vendor
   function requestTokenFromBeneficiary(
+    address _benAddress) external returns (uint requestId);
+
+    function requestReferredTokenFromBeneficiary(
     address _benAddress,
-    uint _amount
+    address _tokenAddress
   ) external returns (uint requestId);
 
   function requestTokenFromBeneficiary(
     address _benAddress,
-    uint _amount,
+    address _tokenAddress,
     address _otpServerAddress
   ) external returns (uint requestId);
 

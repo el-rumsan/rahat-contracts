@@ -8,7 +8,6 @@ interface IRahatClaim {
     address claimeeAddress;
     address otpServerAddress;
     address tokenAddress;
-    uint amount;
     uint expiryDate;
     bytes32 otpHash;
     bool isProcessed;
@@ -18,8 +17,7 @@ interface IRahatClaim {
     address _claimerAddress,
     address _claimeeAddress,
     address _otpServerAddress,
-    address _tokenAddress,
-    uint _amount
+    address _tokenAddress
   ) external returns (uint claimId);
 
   function addOtpToClaim(uint _claimId, bytes32 _otpHash, uint256 _expiryDate) external;
