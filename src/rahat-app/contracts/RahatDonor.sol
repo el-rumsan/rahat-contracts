@@ -6,6 +6,7 @@ import './RahatToken.sol';
 import '../libraries/AbstractTokenActions.sol';
 import '../interfaces/IRahatProject.sol';
 import '../interfaces/IRahatDonor.sol';
+import '../interfaces/IRahatTreasury.sol';
 
 /// @title Donor contract to create tokens
 /// @author Rumsan Associates
@@ -23,9 +24,14 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
   /// @dev deploys AidToken and Rahat contract by sending supply to this contract
 
   bytes4 public constant IID_RAHAT_DONOR = type(IRahatDonor).interfaceId;
+  mapping(uint256 => uint256) public tokenToDollarValue;
 
-  constructor(address _admin) {
+  IRahatTreasury public RahatTreasury;
+
+  constructor(address _admin,address _treasury, uint256 averageDollarValue ) {
     _addOwner(_admin);
+    RahatTreasury = IRahatTreasury(_treasury);
+    tokenToDollarValue[1] = averageDollarValue;
   }
 
   //#region Token function
@@ -47,12 +53,15 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
   function mintTokenAndApprove(
     address _token,
     address _approveAddress,
-    uint256 _amount
+    uint256 _amount,
+    uint256 _treasuryId
   ) public OnlyOwner {
     require(_token != address(0), 'token address cannot be zero');
     require(_approveAddress != address(0), 'approve address cannot be zero');
     require(_amount > 0, 'amount cannot be zero');
-
+    IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
+    uint256 _totalDollar = tokenToDollarValue[1];
+    require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
     RahatToken token = RahatToken(_token);
     token.mint(address(this), _amount);
     token.approve(_approveAddress, _amount);
