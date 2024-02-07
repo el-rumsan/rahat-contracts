@@ -57,6 +57,11 @@ abstract contract AbstractProject is  Multicall {
     _;
   }
 
+  modifier onlyRegisteredToken(address _tokenAddress){
+    require(_registeredTokens[_tokenAddress],"Token not registered");
+    _;
+
+  }
   // #endregion
 
   // // #region ***** Project Functions *********//
@@ -82,6 +87,11 @@ abstract contract AbstractProject is  Multicall {
   function beneficiaryCount() public view virtual returns (uint256) {
     return _beneficiaries.length();
   }
+
+  function registerToken(address _token) internal  {
+    _registeredTokens[_token] = true;
+  }
+
 
   function _addBeneficiary(address _address) internal {
     // require(RahatCommunity.isBeneficiary(_address), 'not valid ben');
@@ -129,6 +139,10 @@ abstract contract AbstractProject is  Multicall {
     _tokenBudgetDecrease(_tokenAddress, _amount);
 
     // emit TokenTransfer(_tokenAddress, address(RahatCommunity), _amount);
+  }
+
+  function close() internal {
+    _closed = true;
   }
 
   // #endregion

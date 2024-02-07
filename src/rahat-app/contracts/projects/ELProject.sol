@@ -32,6 +32,7 @@ contract ELProject is AbstractProject, IELProject {
     uint256 public eyeVoucherClaimed;
     
     uint256 public referredVoucherClaimed;
+ 
 
     IRahatClaim public RahatClaim;
 
@@ -41,10 +42,14 @@ contract ELProject is AbstractProject, IELProject {
         referredToken = _referredToken;
         RahatClaim = IRahatClaim(_rahatClaim);
         otpServerAddress = _otpServerAddress;
+        registerToken(_defaultToken);
+        registerToken(_referredToken);
     }
 
 
-    mapping(address => address) public  beneficiaryClaims; // beneaddress => tokenAddress
+    mapping(address => address) public  beneficiaryEyeVoucher; // beneaddress => tokenAddress
+
+    mapping(address => address) public beneficiaryReferredVoucher; // beneaddress => tokenAddress
 
     mapping(address => mapping(address => bool)) public beneficiaryTokenStatus;
 
@@ -52,47 +57,52 @@ contract ELProject is AbstractProject, IELProject {
 
     mapping(address => mapping(address => uint)) public tokenRequestIds; //vendorAddress =>benAddress=>requestId
 
+    mapping(address => bool) public  _registeredTokens;
+
     // region *****Beneficiary Functions *****//
     
-    function addBeneficiary(address _address ) public {
+    function addBeneficiary(address _address ) public onlyOpen() {
         _addBeneficiary(_address);
     }
 
-    function removeBeneficiary(address _address) public{
+    function removeBeneficiary(address _address) public onlyOpen() {
         _removeBeneficiary(_address);
     }
 
-    function assignClaims(address _claimerAddress) public override{
+    function assignClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken){
         _addBeneficiary(_claimerAddress);
         _assignClaims(_claimerAddress, defaultToken); 
+        eyeVoucherAssigned++;
+        beneficiaryEyeVoucher[_claimerAddress] = defaultToken;
     }
 
-    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override {
+    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_tokenAddress){
         _addBeneficiary(_claimerAddress);
         _assignClaims(_claimerAddress,_refereedToken);
+        referredVoucherAssigned++;
+        beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
     }
 
-    function _assignClaims(address _beneficiary, address _tokenAddress) private{
-        // require(_registeredTokens[_tokenAddress],"token not registered");
+    function _assignClaims(address _beneficiary, address _tokenAddress) private {
         // require(IERC20(_tokenAddress).balanceOf(address(this))>= referredVoucherClaimed() + 1,
         // "not enough tokens");
         beneficiaryTokenStatus[_beneficiary][_tokenAddress] = true;
-        beneficiaryClaims[_beneficiary] =_tokenAddress;
         emit ClaimAssigned(_beneficiary, _tokenAddress);
 
     }
 
-    function requestTokenFromBeneficiary(address _benAddress) public  override returns(uint256 requestId){
+    function requestTokenFromBeneficiary(address _benAddress) public onlyOpen() override returns(uint256 requestId){
+        require(beneficiaryEyeVoucher[_benAddress] == defaultToken,'eye voucher not assigned');
         requestId = requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress);
     }
 
-    function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override returns(uint256 requestId){
+    function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override onlyOpen() returns(uint256 requestId){
+        require(beneficiaryReferredVoucher[_benAddress] == _tokenAddress,'referred voucher not assigned');
         requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress);
     }
 
-    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) public returns(uint256 requestId) {
+    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) public onlyOpen() returns(uint256 requestId) {
         require(otpServerAddress != address(0), 'invalid otp-server');
-        require(beneficiaryClaims[_benAddress] == _tokenAddress,'voucher not assigned');
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'Voucher already claimed');
         //need to check total budget
 
@@ -105,7 +115,7 @@ contract ELProject is AbstractProject, IELProject {
         return requestId;
     }
 
-    function processTokenRequest(address _benAddress, string memory _otp) public{
+    function processTokenRequest(address _benAddress, string memory _otp)onlyOpen() public{
         IRahatClaim.Claim memory _claim = RahatClaim.processClaim(
             tokenRequestIds[msg.sender][_benAddress],
             _otp
@@ -117,16 +127,22 @@ contract ELProject is AbstractProject, IELProject {
     function _transferTokenToClaimer(address _tokenAddress, address _benAddress, address _vendorAddress) private{
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'voucher already claimed' );
         beneficiaryClaimStatus[_benAddress][_tokenAddress] = true;
+        if(_tokenAddress == defaultToken) eyeVoucherClaimed++;
+        else referredVoucherClaimed++;
         require(IERC20(_tokenAddress).transfer(_vendorAddress,1),'transfer failed');
         emit ClaimProcessed(_benAddress, _vendorAddress, _tokenAddress);
     }
 
-    function updateOtpServer(address _address) public {
+    function updateOtpServer(address _address) onlyOpen() public {
         require(_address != address(0), 'invalid address');
         require(_address != address(this), 'cannot be contract address');
         require(_address != address(otpServerAddress), 'no change');
         otpServerAddress = _address;
         emit OtpServerUpdated(_address);
+    }
+
+    function closeProject() public onlyOpen(){
+        close();
     }
 
     // #endregion
