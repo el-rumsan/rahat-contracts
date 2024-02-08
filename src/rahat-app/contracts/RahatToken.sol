@@ -2,14 +2,16 @@
 pragma solidity 0.8.23;
 
 //ERC20 Tokens
-import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol';
 import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol';
 
 import '../interfaces/IRahatToken.sol';
 import '../libraries/AbstractOwner.sol';
 
-contract RahatToken is AbstractOwner, ERC20, ERC20Snapshot, ERC20Burnable, IRahatToken {
+contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken {
   uint8 private decimalPoints;
+  string public description;
+
+  event UpdatedDescription(address updatedBy, string description);
 
   constructor(
     string memory _name,
@@ -34,11 +36,22 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Snapshot, ERC20Burnable, IRaha
     return _amount;
   }
 
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override(ERC20, ERC20Snapshot) {
-    super._beforeTokenTransfer(from, to, amount);
+  function mint(address _address, uint256 _amount, string memory _description) public override OnlyOwner returns(uint256){
+    description = _description;
+    _mint(_address,_amount);
+    return _amount;
+  } 
+
+  function updateDescription(string memory _description) public OnlyOwner(){
+    description = _description;
+    emit UpdatedDescription(msg.sender, _description);
   }
+
+  // function _beforeTokenTransfer(
+  //   address from,
+  //   address to,
+  //   uint256 amount
+  // ) internal override(ERC20) {
+  //   super._beforeTokenTransfer(from, to, amount);
+  // }
 }

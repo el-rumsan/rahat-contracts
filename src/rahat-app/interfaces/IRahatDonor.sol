@@ -10,6 +10,9 @@ interface IRahatDonor is IERC165 {
 
   function mintTokenAndApprove(address _token, address _approveAddress, uint256 _amount) external;
 
+  function mintTokenAndApprove(address _token, address _approveAddress, uint256 _amount,string memory _description) external;
+
+
   function addTokenOwner(address _token, address _ownerAddress) external;
 
 }

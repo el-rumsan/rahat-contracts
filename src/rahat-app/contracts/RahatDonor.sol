@@ -68,6 +68,25 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     emit TokenMintedAndApproved(_token, _approveAddress, _amount);
   }
 
+  function mintTokenAndApprove(
+    address _token,
+    address _approveAddress,
+    uint256 _amount,
+    uint256 _treasuryId,
+    string memory _description
+  ) public  OnlyOwner {
+    require(_token != address(0), 'token address cannot be zero');
+    require(_approveAddress != address(0), 'approve address cannot be zero');
+    require(_amount > 0, 'amount cannot be zero');
+    IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
+    uint256 _totalDollar = tokenToDollarValue[1];
+    require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
+    RahatToken token = RahatToken(_token);
+    token.mint(address(this), _amount,_description);
+    token.approve(_approveAddress, _amount);
+    emit TokenMintedAndApproved(_token, _approveAddress, _amount);
+  }
+
 
   function addTokenOwner(address _token, address _ownerAddress) public OnlyOwner {
     RahatToken(_token).addOwner(_ownerAddress);

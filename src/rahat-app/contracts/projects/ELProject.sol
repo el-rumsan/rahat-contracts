@@ -76,7 +76,7 @@ contract ELProject is AbstractProject, IELProject {
         beneficiaryEyeVoucher[_claimerAddress] = defaultToken;
     }
 
-    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_tokenAddress){
+    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){
         _addBeneficiary(_claimerAddress);
         _assignClaims(_claimerAddress,_refereedToken);
         referredVoucherAssigned++;
