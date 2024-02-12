@@ -16,6 +16,13 @@ async function getMetaTxRequest(signer, forwarderContract, storageContract, func
   
   }
 
+async function getHash(otp){
+    const bytes32 = ethers.toUtf8Bytes(otp);
+    const keecakHash = ethers.keccak256(bytes32);
+    return keecakHash;
+    
+}
+
 
 describe('------ ElProjectFlow Tests ------', function () {
     let deployer
@@ -108,7 +115,7 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should add the otp for claim", async function(){
-           const keecakHash = await rahatClaimContract.findHash("1234");
+            const keecakHash = await getHash("1234");
            const provider = ethers.provider;
             // Get the current block timestamp
             const blockNumber = await provider.getBlockNumber();
