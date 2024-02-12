@@ -1,0 +1,101 @@
+const {expect} = require('chai');
+const {ethers} = require('hardhat');
+
+
+
+describe('------ ElProjectFlow Tests ------', function () {
+    let deployer
+    let ben1;
+    let ben2;
+    let ven1;
+    let eyeTokenContract;
+    let referredTokenContract;
+    let elProjectContract;
+    let rahatDonorContract;
+    let rahatClaimContract;
+
+    before(async function (){
+         const [addr1, addr2,addr3,addr4] = await ethers.getSigners();
+         deployer = addr1;
+         ben1 = addr2;
+         ben2 = addr3;
+         ven1 = addr4;
+        console.log(deployer.address);
+    });
+
+    describe('Deployment', function(){
+        it('Should deploy all required contracts', async function(){
+            rahatDonorContract = await ethers.deployContract('RahatDonor', [deployer.address]);
+            rahatClaimContract = await ethers.deployContract('RahatClaim');
+            eyeTokenContract = await ethers.deployContract('RahatToken', ['EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
+            referredTokenContract = await ethers.deployContract('RahatToken', ['ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
+            rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
+           
+        })
+
+        it("Should mint the eye and referred tokens", async function(){
+            await rahatDonorContract['mintTokenAndApprove(address,address,uint256,string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses");
+            await rahatDonorContract['mintTokenAndApprove(address,address,uint256,string)'](await referredTokenContract.getAddress(),await elProjectContract.getAddress(),3000,"dscount voucher for referred token");
+            const eyeTotalSupply = await eyeTokenContract.totalSupply();
+            expect(Number(eyeTotalSupply)).to.equal(1000);
+            expect(Number(await referredTokenContract.totalSupply())).to.equal(3000);  
+        })
+
+        it("Should add beneficiary", async function(){
+            await elProjectContract.addBeneficiary(ben1.address);
+            expect(await elProjectContract.isBeneficiary(ben1.address)).to.equal(true);
+        })
+
+        it("Should assign free voucher claims to the beneficiaries", async function(){
+            await elProjectContract.assignClaims(ben1.address);
+            expect(Number(await elProjectContract.eyeVoucherAssigned())).to.equal(1);
+            expect (await elProjectContract.beneficiaryEyeVoucher(ben1.address)).to.equal(await eyeTokenContract.getAddress());
+            expect(await elProjectContract.beneficiaryTokenStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(true);
+            expect(await elProjectContract.beneficiaryClaimStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(false);
+        })
+        it("Should assign referred voucher claims to the beneficiaries", async function(){
+            await elProjectContract.assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
+            expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
+            expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
+            expect(await elProjectContract.beneficiaryTokenStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(true);
+            expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
+        })
+
+        it("Should create the request for the claim", async function(){
+            const tx = await elProjectContract.connect(ven1).requestTokenFromBeneficiary(ben1.address);
+            const receipt = await tx.wait();
+            const claimId = await receipt.logs[0].topics[1];
+            expect(Number(claimId)).to.equal(1);
+            expect(await elProjectContract.tokenRequestIds(ven1.address,ben1.address)).to.equal(1);
+            const rahatClaim = await rahatClaimContract.claims(1);
+            expect(rahatClaim[0]).to.equal(await elProjectContract.getAddress());
+            expect(rahatClaim[1]).to.equal(ven1.address);
+            expect(rahatClaim[2]).to.equal(ben1.address);
+            expect(rahatClaim[4]).to.equal(await eyeTokenContract.getAddress());
+        })
+
+        it("Should add the otp for claim", async function(){
+           const keecakHash = await rahatClaimContract.findHash("1234");
+           const provider = ethers.provider;
+            // Get the current block timestamp
+            const blockNumber = await provider.getBlockNumber();
+            const block = await provider.getBlock(blockNumber);
+            const timestamp = block.timestamp;
+
+            await rahatClaimContract.addOtpToClaim(1,keecakHash,timestamp+1000);
+            const claim = await rahatClaimContract.claims(1);
+            expect(claim[6]).to.equal(keecakHash);
+        })
+
+        it("Should process the otp and transfer the claimed token to vendor wallet", async function(){
+            console.log(await eyeTokenContract.allowance(await rahatDonorContract.getAddress(),await elProjectContract.getAddress()));
+            console.log("project balamce",await eyeTokenContract.balanceOf(await elProjectContract.getAddress()))            
+            const tx = await elProjectContract.connect(ven1).processTokenRequest(ben1.address,"1234");
+            const ven1Balance = await eyeTokenContract.balanceOf(ven1.address);
+            expect(Number(ven1Balance)).to.equal(1);
+        })
+
+
+})
+})

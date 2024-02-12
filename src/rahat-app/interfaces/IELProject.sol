@@ -50,4 +50,6 @@ interface IELProject is IERC165 {
   function processTokenRequest(address _benAddress, string memory _otp) external;
 
   function updateOtpServer(address _address) external;
+
+  function increaseTokenBudget(uint256 _amount, address _tokenAddress) external;
 }

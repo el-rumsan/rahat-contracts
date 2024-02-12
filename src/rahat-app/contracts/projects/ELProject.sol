@@ -15,6 +15,7 @@ contract ELProject is AbstractProject, IELProject {
     event VendorAllowance(address indexed vendor, address indexed token );
     event VendorAllowanceAccept(address indexed vendor, address indexed token);
     event OtpServerUpdated(address indexed newaddress);
+    event TokenRedeem(address indexed _vendorAddress, address indexed _tokenAddress, uint256 _amount);
 
     bytes4 public constant IID_RAHAT_PROJECT = type(IELProject).interfaceId;
 
@@ -32,7 +33,6 @@ contract ELProject is AbstractProject, IELProject {
     uint256 public eyeVoucherClaimed;
     
     uint256 public referredVoucherClaimed;
- 
 
     IRahatClaim public RahatClaim;
 
@@ -71,21 +71,21 @@ contract ELProject is AbstractProject, IELProject {
 
     function assignClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken){
         _addBeneficiary(_claimerAddress);
-        _assignClaims(_claimerAddress, defaultToken); 
+        _assignClaims(_claimerAddress, defaultToken,eyeVoucherAssigned); 
         eyeVoucherAssigned++;
         beneficiaryEyeVoucher[_claimerAddress] = defaultToken;
     }
 
-    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){
+    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
         _addBeneficiary(_claimerAddress);
-        _assignClaims(_claimerAddress,_refereedToken);
+        _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
     }
 
-    function _assignClaims(address _beneficiary, address _tokenAddress) private {
-        // require(IERC20(_tokenAddress).balanceOf(address(this))>= referredVoucherClaimed() + 1,
-        // "not enough tokens");
+    function _assignClaims(address _beneficiary, address _tokenAddress, uint256 _tokenAssigned) private {
+        uint256 remainingBudget = tokenBudget(_tokenAddress);
+        require(remainingBudget > _tokenAssigned,'token budget exceed');
         beneficiaryTokenStatus[_beneficiary][_tokenAddress] = true;
         emit ClaimAssigned(_beneficiary, _tokenAddress);
 
@@ -124,12 +124,17 @@ contract ELProject is AbstractProject, IELProject {
 
     }
 
+    function increaseTokenBudget(uint256 _amount, address _tokenAddress) onlyOpen() public override{
+        _tokenBudgetIncrease(_tokenAddress, _amount);
+    }
+
     function _transferTokenToClaimer(address _tokenAddress, address _benAddress, address _vendorAddress) private{
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'voucher already claimed' );
         beneficiaryClaimStatus[_benAddress][_tokenAddress] = true;
         if(_tokenAddress == defaultToken) eyeVoucherClaimed++;
         else referredVoucherClaimed++;
         require(IERC20(_tokenAddress).transfer(_vendorAddress,1),'transfer failed');
+        // _tokenBudgetDecrease(_tokenAddress, 1);
         emit ClaimProcessed(_benAddress, _vendorAddress, _tokenAddress);
     }
 
@@ -141,8 +146,14 @@ contract ELProject is AbstractProject, IELProject {
         emit OtpServerUpdated(_address);
     }
 
-    function closeProject() public onlyOpen(){
+    function closeProject() public onlyOpen() {
         close();
+    }
+
+    function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress) onlyOpen() public {
+        require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
+        require(IERC20(_tokenAddress).transferFrom(_vendorAddress,address(this),_amount),'transfer failed');
+        emit TokenRedeem(_vendorAddress,_tokenAddress,_amount);
     }
 
     // #endregion

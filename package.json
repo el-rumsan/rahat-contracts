@@ -10,18 +10,25 @@
     "test": "hardhat test",
     "prettier": "prettier --write 'src/contracts/**/*.sol'"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "2.2.3",
-    "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "5.0.1",
-    "chai": "4.4.1",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.3",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.2",
+    "@openzeppelin/hardhat-upgrades": "3.0.2",
+    "chai": "^4.3.7",
     "ethers": "6.10.0",
-    "hardhat": "2.19.4",
+    "hardhat": "^2.12.4",
     "prettier": "^2.8.3",
     "prettier-plugin-solidity": "^1.1.1",
-    "solidity-coverage": "0.8.5",
-    "@nomiclabs/hardhat-waffle": "2.0.6",
-    "ethereum-waffle": "^3.4.4"
+    "solidity-coverage": "^0.8.3"
+  },
+  "dependencies": {
+    "@atixlabs/hardhat-time-n-mine": "^0.0.5",
+    "dotenv": "^16.3.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-docgen": "0.6.0-beta.36"
   }
 }
