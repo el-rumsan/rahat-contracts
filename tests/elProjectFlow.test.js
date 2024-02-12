@@ -1,6 +1,20 @@
 const {expect} = require('chai');
 const {ethers} = require('hardhat');
 
+const {signMetaTxRequest} = require("../utils/signer")
+
+async function getMetaTxRequest(signer, forwarderContract, storageContract, functionName, params) {
+    return signMetaTxRequest(
+      signer,
+      forwarderContract,
+      {
+        from: signer.address,
+        to: storageContract.target,
+        data: storageContract.interface.encodeFunctionData(functionName, params),
+      },
+    )
+  
+  }
 
 
 describe('------ ElProjectFlow Tests ------', function () {
@@ -13,6 +27,9 @@ describe('------ ElProjectFlow Tests ------', function () {
     let elProjectContract;
     let rahatDonorContract;
     let rahatClaimContract;
+    let forwarderContract;
+
+
 
     before(async function (){
          const [addr1, addr2,addr3,addr4] = await ethers.getSigners();
@@ -27,9 +44,10 @@ describe('------ ElProjectFlow Tests ------', function () {
         it('Should deploy all required contracts', async function(){
             rahatDonorContract = await ethers.deployContract('RahatDonor', [deployer.address]);
             rahatClaimContract = await ethers.deployContract('RahatClaim');
-            eyeTokenContract = await ethers.deployContract('RahatToken', ['EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
-            referredTokenContract = await ethers.deployContract('RahatToken', ['ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
+            forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
+            eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
+            referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
+            elProjectContract = await ethers.deployContract('ELProject', [await forwarderContract.getAddress(),"ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
         })
@@ -94,6 +112,19 @@ describe('------ ElProjectFlow Tests ------', function () {
             const tx = await elProjectContract.connect(ven1).processTokenRequest(ben1.address,"1234");
             const ven1Balance = await eyeTokenContract.balanceOf(ven1.address);
             expect(Number(ven1Balance)).to.equal(1);
+            // await elProjectContract.approveProject(await eyeTokenContract.getAddress(),1);
+        })
+
+        it("Should transfer claimed token from vendor to project contract", async function(){
+            console.log("ven balance",await eyeTokenContract.balanceOf(ven1.address))
+            const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),1]);
+            const tx = await forwarderContract.execute(request);
+            await tx.wait();
+            console.log('allowamce', await eyeTokenContract.allowance(ven1.address, await elProjectContract.getAddress()))
+            await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address);
+            console.log("ven balance after redemming",await eyeTokenContract.balanceOf(ven1.address))
+
+
         })
 
 

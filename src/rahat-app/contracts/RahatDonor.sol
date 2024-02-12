@@ -40,16 +40,16 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
   }
 
   //#region Token function
-  function createToken(
-    string memory _name,
-    string memory _symbol,
-    uint8 decimals
-  ) public OnlyOwner returns (address) {
-    RahatToken _token = new RahatToken(_name, _symbol, address(this), decimals);
-    address _tokenAddress = address(_token);
-    emit TokenCreated(_tokenAddress);
-    return _tokenAddress;
-  }
+  // function createToken(
+  //   string memory _name,
+  //   string memory _symbol,
+  //   uint8 decimals
+  // ) public OnlyOwner returns (address) {
+  //   RahatToken _token = new RahatToken(_name, _symbol, address(this), decimals);
+  //   address _tokenAddress = address(_token);
+  //   emit TokenCreated(_tokenAddress);
+  //   return _tokenAddress;
+  // }
 
   function mintToken(address _token, uint256 _amount) public OnlyOwner {
     RahatToken(_token).mint(address(this), _amount);

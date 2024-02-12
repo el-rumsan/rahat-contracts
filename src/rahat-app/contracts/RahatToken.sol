@@ -6,19 +6,23 @@ import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol';
 
 import '../interfaces/IRahatToken.sol';
 import '../libraries/AbstractOwner.sol';
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 
-contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken {
+
+contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771Context {
   uint8 private decimalPoints;
   string public description;
 
   event UpdatedDescription(address updatedBy, string description);
 
   constructor(
+    address _forwarder,
     string memory _name,
     string memory _symbol,
     address _admin,
     uint8 _decimals
-  ) ERC20(_name, _symbol) {
+  ) ERC20(_name, _symbol) ERC2771Context(address(_forwarder)) {
     _addOwner(_admin);
     decimalPoints = _decimals;
   }
@@ -46,6 +50,35 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken {
     description = _description;
     emit UpdatedDescription(msg.sender, _description);
   }
+
+  /// @dev overriding the method to ERC2771Context
+    function _msgSender()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        sender = ERC2771Context._msgSender();
+    }
+
+    /// @dev overriding the method to ERC2771Context
+    function _msgData()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (uint256)
+    {
+        return ERC2771Context._contextSuffixLength();
+    }
 
   // function _beforeTokenTransfer(
   //   address from,
