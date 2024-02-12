@@ -46,6 +46,10 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771
     return _amount;
   } 
 
+  function burnFrom(address _account, uint256 _value) public override(ERC20Burnable, IRahatToken){
+    super.burnFrom(_account,_value);
+  }
+
   function updateDescription(string memory _description) public OnlyOwner(){
     description = _description;
     emit UpdatedDescription(msg.sender, _description);

@@ -6,6 +6,12 @@ import '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
 interface IELProject is IERC165 {
 
+  struct ReferredBeneficiaries{
+        address account;
+        address referrerVendor;
+        address referrerBeneficiaries;
+  }
+
   function addBeneficiary(address _address) external;
 
   function removeBeneficiary(address _address) external;

@@ -47,7 +47,8 @@ describe('------ ElProjectFlow Tests ------', function () {
             forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
             eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
             referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', [await forwarderContract.getAddress(),"ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
+            await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(),true);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
         })
@@ -65,6 +66,11 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect(await elProjectContract.isBeneficiary(ben1.address)).to.equal(true);
         })
 
+        it("Should update vendor", async function(){
+            await elProjectContract.updateVendor(ven1.address,true);
+            expect(await elProjectContract.checkVendorStatus(ven1.address)).to.equal(true);
+        })
+
         it("Should assign free voucher claims to the beneficiaries", async function(){
             await elProjectContract.assignClaims(ben1.address);
             expect(Number(await elProjectContract.eyeVoucherAssigned())).to.equal(1);
@@ -72,6 +78,14 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect(await elProjectContract.beneficiaryTokenStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(true);
             expect(await elProjectContract.beneficiaryClaimStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(false);
         })
+        it("Should refer the new beneficiaries", async function(){
+            await elProjectContract.addReferredBeneficiaries(ben2.address,ben1.address,ven1.address);
+            const referredBeneficiary = await elProjectContract.referredBenficiaries(ben2.address);
+            expect(referredBeneficiary[0]).to.equal(ben2.address);
+            expect(referredBeneficiary[1]).to.equal(ven1.address);
+            expect(referredBeneficiary[2]).to.equal(ben1.address);
+        })
+    
         it("Should assign referred voucher claims to the beneficiaries", async function(){
             await elProjectContract.assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
@@ -117,11 +131,13 @@ describe('------ ElProjectFlow Tests ------', function () {
 
         it("Should transfer claimed token from vendor to project contract", async function(){
             console.log("ven balance",await eyeTokenContract.balanceOf(ven1.address))
+            const projectBalanceBefore = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
             const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),1]);
             const tx = await forwarderContract.execute(request);
             await tx.wait();
             console.log('allowamce', await eyeTokenContract.allowance(ven1.address, await elProjectContract.getAddress()))
             await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address);
+            const projectBalanceAfter = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
             console.log("ven balance after redemming",await eyeTokenContract.balanceOf(ven1.address))
 
 

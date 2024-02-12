@@ -6,6 +6,8 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/Multicall.sol';
 
 import '../interfaces/IRahatProject.sol';
+import '../interfaces/IRahatToken.sol';
+
 
 abstract contract AbstractProject is  Multicall {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -21,12 +23,16 @@ abstract contract AbstractProject is  Multicall {
   event TokenBudgetDecrease(address indexed tokenAddress, uint amount);
   event TokenReceived(address indexed token, address indexed from, uint amount);
   event TokenTransfer(address indexed token, address indexed to, uint amount);
+  event VendorUpdated(address indexed vendorAddress, bool status);
   // #endregion
+
 
   // #region ***** Variables *********//
   bool internal _closed;
   mapping(address => uint) private _tokenBudget;
   mapping(address => bool) private _registeredTokens;
+  mapping(address => bool) private _vendor;
+  mapping(address => bool) private _admin;
 
   string public  name;
   // bool public override isLocked;
@@ -36,8 +42,9 @@ abstract contract AbstractProject is  Multicall {
 
   // #endregion
 
-  constructor(string memory _name) {
+  constructor(string memory _name,address _adminAddress) {
     name = _name;
+    _admin[_adminAddress] = true;
     // RahatCommunity = IRahatCommunity(_community);
   }
 
@@ -61,6 +68,11 @@ abstract contract AbstractProject is  Multicall {
     require(_registeredTokens[_tokenAddress],"Token not registered");
     _;
 
+  }
+
+  modifier onlyAdmin(address _adminAddress){
+    require(_admin[_adminAddress],"not an admin");
+    _;
   }
   // #endregion
 
@@ -99,9 +111,26 @@ abstract contract AbstractProject is  Multicall {
     _beneficiaries.add(_address);
   }
 
+  function _updateAdmin(address _address,bool _status) internal{
+    _admin[_address] = _status;
+  }
+
   function _removeBeneficiary(address _address) internal {
     if (_beneficiaries.contains(_address)) emit BeneficiaryRemoved(_address);
     _beneficiaries.remove(_address);
+  }
+
+  function _updateVendorStatus(address _address,bool _status) internal{
+    _vendor[_address] = _status;
+    emit VendorUpdated(_address, _status);
+  }
+
+  function checkVendorStatus(address _address) public view virtual returns(bool _vendorStatus) {
+    return _vendor[_address];
+  }
+
+  function checkAdminStatus(address _address) public view virtual returns(bool _status){
+    return _admin[_address];
   }
 
   // #endregion

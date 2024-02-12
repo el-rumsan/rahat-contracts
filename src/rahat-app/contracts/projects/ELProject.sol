@@ -5,11 +5,11 @@ pragma solidity 0.8.23;
 import '../../interfaces/IELProject.sol';
 import '../../libraries/AbstractProject.sol';
 import '../../interfaces/IRahatClaim.sol';
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 
-contract ELProject is AbstractProject, IELProject, ERC2771Context {
+contract ELProject is AbstractProject, IELProject {
     using EnumerableSet for EnumerableSet.AddressSet;
+
+
 
     event ClaimAssigned(address indexed beneficiary,address tokenAddress);
     event ClaimProcessed(address indexed beneficiary,address indexed vendor, address indexed token);
@@ -18,8 +18,12 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     event VendorAllowanceAccept(address indexed vendor, address indexed token);
     event OtpServerUpdated(address indexed newaddress);
     event TokenRedeem(address indexed _vendorAddress, address indexed _tokenAddress, uint256 _amount);
+    event BeneficiaryReferred(address indexed _referrerVendor, address indexed _referrerBeneficiaries, address beneficiaryAddress);
+    event ReferredBeneficiaryRemoved(address indexed _benAddress, address _removedBy);
 
     bytes4 public constant IID_RAHAT_PROJECT = type(IELProject).interfaceId;
+
+    EnumerableSet.AddressSet internal _referredBeneficiaries;
 
 
     address public  defaultToken;
@@ -38,8 +42,11 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     IRahatClaim public RahatClaim;
 
+ 
 
-    constructor(address _forwarder,string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress) AbstractProject(_name) ERC2771Context(address (_forwarder)){
+    mapping(address => ReferredBeneficiaries) public referredBenficiaries;
+
+    constructor(string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress) AbstractProject(_name,msg.sender){
         defaultToken = _defaultToken;
         referredToken = _referredToken;
         RahatClaim = IRahatClaim(_rahatClaim);
@@ -61,14 +68,46 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     mapping(address => bool) public  _registeredTokens;
 
+
     // region *****Beneficiary Functions *****//
     
-    function addBeneficiary(address _address ) public onlyOpen() {
+    function addBeneficiary(address _address ) public onlyOpen() onlyAdmin(msg.sender){
         _addBeneficiary(_address);
     }
 
-    function removeBeneficiary(address _address) public onlyOpen() {
+    function removeBeneficiary(address _address) public onlyOpen() onlyAdmin(msg.sender) {
         _removeBeneficiary(_address);
+    }
+
+    function updateAdmin(address _admin,bool _status) public onlyOpen() onlyAdmin(msg.sender){
+        _updateAdmin(_admin,_status);
+    }
+
+    function updateVendor(address _address, bool _status) public onlyOpen() onlyAdmin(msg.sender){
+        _updateVendorStatus(_address, _status);
+    }
+
+    function addReferredBeneficiaries(address _account, address _benAddress, address _vendorAddress) public {
+        require(_beneficiaries.contains(_benAddress),'referrer ben not registered');
+        require(checkVendorStatus(_vendorAddress),'vendor not approved');
+        referredBenficiaries[_account] = ReferredBeneficiaries({
+            account:_account,
+            referrerVendor: _vendorAddress,
+            referrerBeneficiaries: _benAddress
+        });
+        _referredBeneficiaries.add(_account);
+        emit BeneficiaryReferred(_vendorAddress, _benAddress, _account);
+    }
+
+    function removeReferredBeneficiaries(address _account) public {
+        require(_referredBeneficiaries.contains(_account),'referrer ben not registered');
+        referredBenficiaries[_account] = ReferredBeneficiaries({
+            account:address(0),
+            referrerVendor: address(0),
+            referrerBeneficiaries: address(0)
+        });
+        _referredBeneficiaries.remove(_account);
+        emit ReferredBeneficiaryRemoved(_account, msg.sender);
     }
 
     function assignClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken){
@@ -79,7 +118,8 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     }
 
     function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
-        _addBeneficiary(_claimerAddress);
+        // _addBeneficiary(_claimerAddress);
+        require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
@@ -126,7 +166,9 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     }
 
-    function increaseTokenBudget(uint256 _amount, address _tokenAddress) onlyOpen() public override{
+    function increaseTokenBudget(uint256 _amount, address _tokenAddress) onlyOpen() onlyAdmin(msg.sender) public override{
+        uint256 budget = tokenBudget(_tokenAddress);
+        require(IERC20(_tokenAddress).totalSupply()>= budget+_amount);
         _tokenBudgetIncrease(_tokenAddress, _amount);
     }
 
@@ -155,46 +197,14 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress) onlyOpen() public {
         require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
         // require(IERC20(_tokenAddress).approve(address(this),_amount),'approve failed');
-        require(IERC20(_tokenAddress).transferFrom(_vendorAddress,address(this),_amount),'transfer failed');
+        // require(IERC20(_tokenAddress).transferFrom(_vendorAddress,address(this),_amount),'transfer failed');
+        IRahatToken(_tokenAddress).burnFrom(_vendorAddress,_amount);
         emit TokenRedeem(_vendorAddress,_tokenAddress,_amount);
     }
 
-    function approveProject(address _tokenAddress, uint256 _amount) public{
-        require(IERC20(_tokenAddress).approve(address(this),_amount),'approve failed');
-    }
 
     // #endregion
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == IID_RAHAT_PROJECT;
         }
-
-    /// @dev overriding the method to ERC2771Context
-    function _msgSender()
-        internal
-        view
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
-        sender = ERC2771Context._msgSender();
-    }
-
-    /// @dev overriding the method to ERC2771Context
-    function _msgData()
-        internal
-        view
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
-        return ERC2771Context._msgData();
-    }
-
-    function _contextSuffixLength()
-        internal
-        view
-        override(Context, ERC2771Context)
-        returns (uint256)
-    {
-        return ERC2771Context._contextSuffixLength();
-    }
-        // return interfaceId == IID_RAHAT_PROJECT;
 }

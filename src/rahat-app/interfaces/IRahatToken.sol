@@ -6,5 +6,6 @@ import "./IOwner.sol";
 
 interface IRahatToken is IOwner, IERC20 {
     function mint(address _address, uint256 _amount, string memory _description) external returns(uint256);
+    function burnFrom(address _account, uint256 _amount) external;
     
 }
