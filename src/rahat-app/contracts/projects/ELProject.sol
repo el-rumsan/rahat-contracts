@@ -60,13 +60,16 @@ contract ELProject is AbstractProject, IELProject {
 
     mapping(address => address) public beneficiaryReferredVoucher; // beneaddress => tokenAddress
 
-    mapping(address => mapping(address => bool)) public beneficiaryTokenStatus;
+    mapping(address => uint256) public eyeVoucherRedeemedByVendor;
+
+    mapping(address => uint256) public referredVoucherRedeemedByVendor;
 
     mapping(address => mapping(address => bool)) public beneficiaryClaimStatus;
 
     mapping(address => mapping(address => uint)) public tokenRequestIds; //vendorAddress =>benAddress=>requestId
 
     mapping(address => bool) public  _registeredTokens;
+
 
 
     // region *****Beneficiary Functions *****//
@@ -128,7 +131,6 @@ contract ELProject is AbstractProject, IELProject {
     function _assignClaims(address _beneficiary, address _tokenAddress, uint256 _tokenAssigned) private {
         uint256 remainingBudget = tokenBudget(_tokenAddress);
         require(remainingBudget > _tokenAssigned,'token budget exceed');
-        beneficiaryTokenStatus[_beneficiary][_tokenAddress] = true;
         emit ClaimAssigned(_beneficiary, _tokenAddress);
 
     }
@@ -175,8 +177,14 @@ contract ELProject is AbstractProject, IELProject {
     function _transferTokenToClaimer(address _tokenAddress, address _benAddress, address _vendorAddress) private{
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'voucher already claimed' );
         beneficiaryClaimStatus[_benAddress][_tokenAddress] = true;
-        if(_tokenAddress == defaultToken) eyeVoucherClaimed++;
-        else referredVoucherClaimed++;
+        if(_tokenAddress == defaultToken) {eyeVoucherClaimed++;
+        eyeVoucherRedeemedByVendor[_vendorAddress]++;
+        }
+        else {
+            referredVoucherClaimed++;
+            referredVoucherRedeemedByVendor[_vendorAddress]++;
+        
+        }
         require(IERC20(_tokenAddress).transfer(_vendorAddress,1),'transfer failed');
         // _tokenBudgetDecrease(_tokenAddress, 1);
         emit ClaimProcessed(_benAddress, _vendorAddress, _tokenAddress);

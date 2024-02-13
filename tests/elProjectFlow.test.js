@@ -82,7 +82,6 @@ describe('------ ElProjectFlow Tests ------', function () {
             await elProjectContract.assignClaims(ben1.address);
             expect(Number(await elProjectContract.eyeVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryEyeVoucher(ben1.address)).to.equal(await eyeTokenContract.getAddress());
-            expect(await elProjectContract.beneficiaryTokenStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(true);
             expect(await elProjectContract.beneficiaryClaimStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(false);
         })
         it("Should refer the new beneficiaries", async function(){
@@ -97,7 +96,6 @@ describe('------ ElProjectFlow Tests ------', function () {
             await elProjectContract.assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
-            expect(await elProjectContract.beneficiaryTokenStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(true);
             expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
         })
 
@@ -133,6 +131,8 @@ describe('------ ElProjectFlow Tests ------', function () {
             const tx = await elProjectContract.connect(ven1).processTokenRequest(ben1.address,"1234");
             const ven1Balance = await eyeTokenContract.balanceOf(ven1.address);
             expect(Number(ven1Balance)).to.equal(1);
+            const eyeTokenRedeemed = await elProjectContract.eyeVoucherRedeemedByVendor(ven1.address);
+            expect(Number(eyeTokenRedeemed)).to.equal(1);
             // await elProjectContract.approveProject(await eyeTokenContract.getAddress(),1);
         })
 
