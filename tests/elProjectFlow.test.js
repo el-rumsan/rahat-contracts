@@ -44,7 +44,6 @@ describe('------ ElProjectFlow Tests ------', function () {
          ben1 = addr2;
          ben2 = addr3;
          ven1 = addr4;
-        console.log(deployer.address);
     });
 
     describe('Deployment', function(){
@@ -126,8 +125,6 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should process the otp and transfer the claimed token to vendor wallet", async function(){
-            console.log(await eyeTokenContract.allowance(await rahatDonorContract.getAddress(),await elProjectContract.getAddress()));
-            console.log("project balamce",await eyeTokenContract.balanceOf(await elProjectContract.getAddress()))            
             const tx = await elProjectContract.connect(ven1).processTokenRequest(ben1.address,"1234");
             const ven1Balance = await eyeTokenContract.balanceOf(ven1.address);
             expect(Number(ven1Balance)).to.equal(1);
@@ -137,16 +134,12 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should transfer claimed token from vendor to project contract", async function(){
-            console.log("ven balance",await eyeTokenContract.balanceOf(ven1.address))
             const projectBalanceBefore = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
             const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),1]);
             const tx = await forwarderContract.execute(request);
             await tx.wait();
-            console.log('allowamce', await eyeTokenContract.allowance(ven1.address, await elProjectContract.getAddress()))
             await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address);
             const projectBalanceAfter = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
-            console.log("ven balance after redemming",await eyeTokenContract.balanceOf(ven1.address))
-
 
         })
 
