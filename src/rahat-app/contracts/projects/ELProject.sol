@@ -9,8 +9,6 @@ import '../../interfaces/IRahatClaim.sol';
 contract ELProject is AbstractProject, IELProject {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-
-
     event ClaimAssigned(address indexed beneficiary,address tokenAddress);
     event ClaimProcessed(address indexed beneficiary,address indexed vendor, address indexed token);
 
@@ -121,7 +119,6 @@ contract ELProject is AbstractProject, IELProject {
     }
 
     function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
-        // _addBeneficiary(_claimerAddress);
         require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
         referredVoucherAssigned++;

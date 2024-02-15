@@ -92,7 +92,7 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     // require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
     RahatToken token = RahatToken(_token);
     token.mint(_projectAddress, _amount,_description);
-    token.approve(_projectAddress, _amount);
+    // token.approve(_projectAddress, _amount);
     IELProject(_projectAddress).increaseTokenBudget(_amount,_token);
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
   }
