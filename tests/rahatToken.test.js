@@ -2,18 +2,18 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
 describe('RahatToken', function () {
-  let deployer;
-  let admin;
   let user;
+  let admin;
+  let user2;
   let rahatTokenContract;
   let forwarderContract;
   let mintAmount;
 
   before(async function () {
     const [addr1, addr2, addr3] = await ethers.getSigners();
-    deployer = addr1;
+    user = addr1;
     admin = addr2;
-    user = addr3;
+    user2 = addr3;
   });
 
   describe('Deployment', function () {
@@ -48,6 +48,20 @@ describe('RahatToken', function () {
       // Check if the user balance is updated
       const userBalance = await rahatTokenContract.balanceOf(user.address);
       expect(userBalance).to.equal(100);
+    });
+
+    it('Should mint tokens to a user and update description', async function () {
+      mintAmount = 100;
+      const newDescription = 'New description while minting';
+
+      await rahatTokenContract
+        .connect(admin)
+        ['mint(address,uint256,string)'](user2.address, mintAmount, newDescription);
+
+      // Check if the user balance and token description is updated
+      const userBalance = await rahatTokenContract.balanceOf(user2.address);
+      expect(userBalance).to.equal(100);
+      expect(await rahatTokenContract.description()).to.equal(newDescription);
     });
 
     it('Should burn tokens from a user', async function () {
