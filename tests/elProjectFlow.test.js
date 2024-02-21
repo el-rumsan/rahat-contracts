@@ -89,6 +89,9 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect(referredBeneficiary[0]).to.equal(ben2.address);
             expect(referredBeneficiary[1]).to.equal(ven1.address);
             expect(referredBeneficiary[2]).to.equal(ben1.address);
+            const benList = await elProjectContract.getTotalBeneficiaries();
+            expect(Number(benList.enrolledBen)).to.equal(1);
+            expect(Number(benList.referredBen)).to.equal(1);
         })
     
         it("Should assign referred voucher claims to the beneficiaries", async function(){

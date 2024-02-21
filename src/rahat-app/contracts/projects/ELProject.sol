@@ -202,6 +202,13 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
         close();
     }
 
+    function getTotalBeneficiaries() public view returns(uint256 enrolledBen, uint256 referredBen){
+        enrolledBen = _beneficiaries.length();
+        referredBen = _referredBeneficiaries.length();
+        return(enrolledBen,referredBen);
+
+    }
+
     function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress) onlyOpen() public {
         require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
         // require(IERC20(_tokenAddress).approve(address(this),_amount),'approve failed');
