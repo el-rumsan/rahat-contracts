@@ -5,8 +5,11 @@ pragma solidity 0.8.23;
 import '../../interfaces/IELProject.sol';
 import '../../libraries/AbstractProject.sol';
 import '../../interfaces/IRahatClaim.sol';
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 
-contract ELProject is AbstractProject, IELProject {
+contract ELProject is AbstractProject, IELProject, ERC2771Context {
+    
     using EnumerableSet for EnumerableSet.AddressSet;
 
     event ClaimAssigned(address indexed beneficiary,address tokenAddress);
@@ -44,10 +47,10 @@ contract ELProject is AbstractProject, IELProject {
 
     mapping(address => ReferredBeneficiaries) public referredBenficiaries;
 
-    constructor(string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress) AbstractProject(_name,msg.sender){
+    constructor(string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress, address _forwarder) AbstractProject(_name,msg.sender) ERC2771Context(_forwarder){
         defaultToken = _defaultToken;
         referredToken = _referredToken;
-        RahatClaim = IRahatClaim(_rahatClaim);
+        RahatClaim = IRahatClaim(_rahatClaim); 
         otpServerAddress = _otpServerAddress;
         registerToken(_defaultToken);
         registerToken(_referredToken);
@@ -211,5 +214,35 @@ contract ELProject is AbstractProject, IELProject {
     // #endregion
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == IID_RAHAT_PROJECT;
-        }
+    }
+
+
+      /// @dev overriding the method to ERC2771Context
+    function _msgSender()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        sender = ERC2771Context._msgSender();
+    }
+
+    /// @dev overriding the method to ERC2771Context
+    function _msgData()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (uint256)
+    {
+        return ERC2771Context._contextSuffixLength();
+    }
 }

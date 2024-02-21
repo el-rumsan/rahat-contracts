@@ -53,7 +53,7 @@ describe('------ ElProjectFlow Tests ------', function () {
             forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
             eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
             referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress()]);
             await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(),true);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
