@@ -28,12 +28,9 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
 
   mapping(address => bool) public _registeredProject;
 
-
-
-
   IRahatTreasury public RahatTreasury;
 
-  constructor(address _admin ) {
+  constructor(address _admin) {
     _addOwner(_admin);
     // RahatTreasury = IRahatTreasury(_treasury);
     // tokenToDollarValue[1] = averageDollarValue;
@@ -60,11 +57,14 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     address _projectAddress,
     // address _approveAddress,
     uint256 _amount
+  )
+    public
     // uint256 _treasuryId
-  ) public OnlyOwner {
+    OnlyOwner
+  {
     require(_token != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');
-    require(_registeredProject[_projectAddress],'project not registered');
+    require(_registeredProject[_projectAddress], 'project not registered');
     require(_amount > 0, 'amount cannot be zero');
     // IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
     // uint256 _totalDollar = tokenToDollarValue[1];
@@ -72,7 +72,7 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     RahatToken token = RahatToken(_token);
     token.mint(_projectAddress, _amount);
     token.approve(_projectAddress, _amount);
-    IELProject(_projectAddress).increaseTokenBudget(_amount,_token);
+    IELProject(_projectAddress).increaseTokenBudget(_amount, _token);
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
   }
 
@@ -82,27 +82,26 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     uint256 _amount,
     // uint256 _treasuryId,
     string memory _description
-  ) public  OnlyOwner {
+  ) public OnlyOwner {
     require(_token != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');
-    require(_registeredProject[_projectAddress],'project not registered');
+    require(_registeredProject[_projectAddress], 'project not registered');
     require(_amount > 0, 'amount cannot be zero');
     // IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
     // uint256 _totalDollar = tokenToDollarValue[1];
     // require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
     RahatToken token = RahatToken(_token);
-    token.mint(_projectAddress, _amount,_description);
+    token.mint(_projectAddress, _amount, _description);
     // token.approve(_projectAddress, _amount);
-    IELProject(_projectAddress).increaseTokenBudget(_amount,_token);
+    IELProject(_projectAddress).increaseTokenBudget(_amount, _token);
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
   }
-
 
   function addTokenOwner(address _token, address _ownerAddress) public OnlyOwner {
     RahatToken(_token).addOwner(_ownerAddress);
   }
 
-  function registerProject(address _projectAddress, bool status) public OnlyOwner{
+  function registerProject(address _projectAddress, bool status) public OnlyOwner {
     _registeredProject[_projectAddress] = status;
   }
 
