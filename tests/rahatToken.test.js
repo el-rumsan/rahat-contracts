@@ -47,7 +47,7 @@ describe('RahatToken', function () {
 
       // Check if the user balance is updated
       const userBalance = await rahatTokenContract.balanceOf(user.address);
-      expect(userBalance).to.equal(100);
+      expect(userBalance).to.equal(mintAmount);
     });
 
     it('Should mint tokens to a user and update description', async function () {

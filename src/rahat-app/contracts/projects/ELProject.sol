@@ -41,19 +41,22 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     
     uint256 public referredVoucherClaimed;
 
+    uint256 public  referralLimit;
+
     IRahatClaim public RahatClaim;
 
  
 
     mapping(address => ReferredBeneficiaries) public referredBenficiaries;
 
-    constructor(string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress, address _forwarder) AbstractProject(_name,msg.sender) ERC2771Context(_forwarder){
+    constructor(string memory _name, address _defaultToken, address _referredToken, address _rahatClaim, address _otpServerAddress, address _forwarder,uint256 _referralLimit) AbstractProject(_name,msg.sender) ERC2771Context(_forwarder){
         defaultToken = _defaultToken;
         referredToken = _referredToken;
         RahatClaim = IRahatClaim(_rahatClaim); 
         otpServerAddress = _otpServerAddress;
         registerToken(_defaultToken);
         registerToken(_referredToken);
+        referralLimit = _referralLimit;
     }
 
 
@@ -64,6 +67,10 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     mapping(address => uint256) public eyeVoucherRedeemedByVendor;
 
     mapping(address => uint256) public referredVoucherRedeemedByVendor;
+
+    mapping(address =>uint256) public beneficiaryReferredByVendor;//venAddress =>totalnumber
+
+    mapping(address =>uint256) public beneficiaryReferredByBeneficiary;
 
     mapping(address => mapping(address => bool)) public beneficiaryClaimStatus;
 
@@ -94,12 +101,15 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     function addReferredBeneficiaries(address _account, address _benAddress, address _vendorAddress) public {
         require(_beneficiaries.contains(_benAddress),'referrer ben not registered');
         require(checkVendorStatus(_vendorAddress),'vendor not approved');
+        require(beneficiaryReferredByBeneficiary[_benAddress] <= referralLimit,'referral:limit hit');
         referredBenficiaries[_account] = ReferredBeneficiaries({
             account:_account,
             referrerVendor: _vendorAddress,
             referrerBeneficiaries: _benAddress
         });
         _referredBeneficiaries.add(_account);
+        beneficiaryReferredByBeneficiary[_benAddress]++;
+        beneficiaryReferredByVendor[_vendorAddress] ++;
         emit BeneficiaryReferred(_vendorAddress, _benAddress, _account);
     }
 
@@ -200,6 +210,30 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     function closeProject() public onlyOpen() {
         close();
+    }
+
+    function getVendorVoucherDetail(address _vendor) public view returns(VoucherDetailByVendor memory voucherDetails){
+        voucherDetails = VoucherDetailByVendor({
+            freeVoucherRedeemed:  eyeVoucherRedeemedByVendor[_vendor],
+            referredVoucherRedeemed : referredVoucherRedeemedByVendor[_vendor],
+            beneficiaryReferred : beneficiaryReferredByVendor[_vendor]
+            });
+        return voucherDetails;
+
+    }
+
+    function getProjectVoucherDetail() public view returns(ProjectVoucherDetails memory projectVoucherDetails){
+        projectVoucherDetails = ProjectVoucherDetails({
+           eyeVoucherAssigned: eyeVoucherAssigned,
+            referredVoucherAssigned:referredVoucherAssigned,
+            eyeVoucherClaimed:eyeVoucherClaimed,
+            referredVoucherClaimed:referredVoucherClaimed,
+            eyeVoucherBudget:tokenBudget(defaultToken),
+            referredVoucherBudget:tokenBudget(referredToken)
+        });
+
+        return projectVoucherDetails;
+
     }
 
     function getTotalBeneficiaries() public view returns(uint256 enrolledBen, uint256 referredBen){
