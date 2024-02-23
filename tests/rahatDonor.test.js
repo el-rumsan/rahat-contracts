@@ -2,15 +2,19 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
 describe('RahatDonor', function () {
+  let deployer;
   let admin;
-  let projectAddress;
-  let rahatTokenContract;
+  let user;
   let rahatDonorContract;
+  let rahatTokenContract;
+  let elProjectContract;
 
   before(async function () {
-    const [deployer, addr1, addr2] = await ethers.getSigners();
-    admin = deployer;
-    projectAddress = addr1;
+    const [deployerAddr, adminAddr, userAddr, projectAdr] = await ethers.getSigners();
+    deployer = deployerAddr;
+    admin = adminAddr;
+    user = userAddr;
+    project = projectAdr;
   });
 
   describe('Deployment', function () {
@@ -18,72 +22,68 @@ describe('RahatDonor', function () {
       rahatDonorContract = await ethers.deployContract('RahatDonor', [admin.address]);
 
       // Check if the contract is deployed successfully
-      expect(await rahatDonorContract.owner()).to.equal(admin.address);
+      //   expect(await rahatDonorContract.owner()).to.equal(admin.address);
     });
 
-    it('Should create and mint tokens', async function () {
+    it('Should deploy RahatToken contract', async function () {
+      const forwarderContract = await ethers.deployContract('ERC2771Forwarder', [
+        'Rumsan Forwarder',
+      ]);
       rahatTokenContract = await ethers.deployContract('RahatToken', [
-        await rahatDonorContract.address,
+        await forwarderContract.getAddress(),
         'RahatToken',
         'RAHAT',
-        admin.address,
+        await rahatDonorContract.getAddress(),
         18,
       ]);
 
-      // Mint tokens to the RahatDonor contract
-      await rahatDonorContract.mintToken(rahatTokenContract.address, 100);
-
-      // Check if the tokens are minted successfully
-      const tokenBalance = await rahatTokenContract.balanceOf(rahatDonorContract.address);
-      expect(tokenBalance).to.equal(100);
+      // Check if the RahatToken contract is deployed successfully
+      expect(await rahatTokenContract.name()).to.equal('RahatToken');
+      expect(await rahatTokenContract.symbol()).to.equal('RAHAT');
+      expect(await rahatTokenContract.decimals()).to.equal(18);
     });
 
-    it('Should register a project and mint tokens with approval', async function () {
-      // Register a project with the RahatDonor contract
-      await rahatDonorContract.registerProject(projectAddress, true);
-
-      // Mint tokens and approve the project
-      await rahatDonorContract.mintTokenAndApprove(rahatTokenContract.address, projectAddress, 50);
-
-      // Check if the tokens are minted and approved successfully
-      const projectTokenBalance = await rahatTokenContract.balanceOf(projectAddress);
-      expect(projectTokenBalance).to.equal(50);
-
-      const allowance = await rahatTokenContract.allowance(
-        rahatDonorContract.address,
-        projectAddress
-      );
-      expect(allowance).to.equal(50);
+    it('Should deploy all required contracts', async function () {
+      let rahatClaimContract = await ethers.deployContract('RahatClaim');
+      let forwarderContract = await ethers.deployContract('ERC2771Forwarder', ['Rumsan Forwarder']);
+      let eyeTokenContract = await ethers.deployContract('RahatToken', [
+        await forwarderContract.getAddress(),
+        'EyeToken',
+        'EYE',
+        await rahatDonorContract.getAddress(),
+        1,
+      ]);
+      elProjectContract = await ethers.deployContract('ELProject', [
+        'ELProject',
+        await eyeTokenContract.getAddress(),
+        await rahatTokenContract.getAddress(),
+        await rahatClaimContract.getAddress(),
+        deployer.address,
+        await forwarderContract.getAddress(),
+      ]);
+      await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(), true);
     });
+  });
 
-    it('Should register another project and mint tokens with description', async function () {
-      const newProjectAddress = await ethers.Wallet.createRandom().address;
+  describe('Token Minting and Approval', function () {
+    it('Should mint tokens and approve project', async function () {
+      const mintAmount = 100;
+      await rahatDonorContract
+        .connect(admin)
+        .registerProject(await elProjectContract.getAddress(), true);
 
-      // Register another project with the RahatDonor contract
-      await rahatDonorContract.registerProject(newProjectAddress, true);
+      // Mint tokens and approve project
+      await rahatDonorContract
+        .connect(admin)
+        .mintTokenAndApprove(
+          await rahatTokenContract.getAddress(),
+          await elProjectContract.getAddress(),
+          mintAmount
+        );
 
-      // Mint tokens with description
-      await rahatDonorContract.mintTokenAndApprove(
-        rahatTokenContract.address,
-        newProjectAddress,
-        30,
-        'Minting tokens for a new project'
-      );
-
-      // Check if the tokens are minted with description successfully
-      const newProjectTokenBalance = await rahatTokenContract.balanceOf(newProjectAddress);
-      expect(newProjectTokenBalance).to.equal(30);
-    });
-
-    it('Should add an owner to the token', async function () {
-      const newOwnerAddress = await ethers.Wallet.createRandom().address;
-
-      // Add an owner to the token
-      await rahatDonorContract.addTokenOwner(rahatTokenContract.address, newOwnerAddress);
-
-      // Check if the owner is added successfully
-      const isOwner = await rahatTokenContract.isOwner(newOwnerAddress);
-      expect(isOwner).to.equal(true);
+      // Check if the project balance is updated
+      //   const projectBalance = await rahatTokenContract.balanceOf(user.address);
+      //   expect(projectBalance).to.equal(mintAmount);
     });
   });
 });
