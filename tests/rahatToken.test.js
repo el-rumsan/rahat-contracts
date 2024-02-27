@@ -44,7 +44,7 @@ describe('RahatToken', function () {
       await rahatTokenContract.connect(admin).mint(user.address, mintAmount);
 
       const userBalance = await rahatTokenContract.balanceOf(user.address);
-      expect(userBalance).to.equal(100);
+      expect(userBalance).to.equal(mintAmount);
     });
 
     it('Should mint tokens to a user and update description', async function () {

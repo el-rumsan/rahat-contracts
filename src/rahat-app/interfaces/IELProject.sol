@@ -12,6 +12,22 @@ interface IELProject is IERC165 {
         address referrerBeneficiaries;
   }
 
+  struct ProjectVoucherDetails{
+    uint256 eyeVoucherAssigned;
+    uint256 referredVoucherAssigned;
+    uint256 eyeVoucherClaimed;
+    uint256 referredVoucherClaimed;
+    uint256 eyeVoucherBudget;
+    uint256 referredVoucherBudget;
+
+  }
+
+  struct VoucherDetailByVendor{
+    uint256 freeVoucherRedeemed;
+    uint256 referredVoucherRedeemed;
+    uint256 beneficiaryReferred;
+  }
+
   function addBeneficiary(address _address) external;
 
   function removeBeneficiary(address _address) external;
