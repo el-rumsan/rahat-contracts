@@ -13,6 +13,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     event ClaimAssigned(address indexed beneficiary,address tokenAddress);
+    event ClaimRevert(address indexed beneficiary, address tokenAddress);
     event ClaimProcessed(address indexed beneficiary,address indexed vendor, address indexed token);
 
     event VendorAllowance(address indexed vendor, address indexed token );
@@ -36,6 +37,10 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     uint256 public eyeVoucherAssigned;
 
     uint256 public referredVoucherAssigned;
+
+    uint256 public eyeVoucherReverted;
+
+    uint256 public referredVoucherReverted;
 
     uint256 public eyeVoucherClaimed;
     
@@ -136,6 +141,25 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
+    }
+
+    function revertedClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken){
+        _revertClaims(_claimerAddress, defaultToken, eyeVoucherReverted); 
+        eyeVoucherReverted++;
+        beneficiaryEyeVoucher[_claimerAddress] = defaultToken;
+    }
+
+    function revertedRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
+        require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
+        _revertClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
+        referredVoucherAssigned++;
+        beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
+    }
+
+    function _revertClaims(address _beneficiary, address _tokenAddress, uint256 _revertedTokens) private {
+        uint256 benificiaryToken = tokenBudget(_beneficiary);
+        require(benificiaryToken < _revertedTokens, 'token budget exceed');
+        emit ClaimRevert(_beneficiary, _tokenAddress);
     }
 
     function _assignClaims(address _beneficiary, address _tokenAddress, uint256 _tokenAssigned) private {
@@ -256,7 +280,6 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == IID_RAHAT_PROJECT;
     }
-
 
       /// @dev overriding the method to ERC2771Context
     function _msgSender()

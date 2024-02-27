@@ -35,7 +35,7 @@ contract RahatTreasury is IRahatTreasury{
 
     }
 
- function redeemToken(uint256 _treasuryId, uint256 _amount) public{
+    function redeemToken(uint256 _treasuryId, uint256 _amount) public{
         Treasury storage _treasury = treasury[_treasuryId];
         require(bytes(_treasury.country).length>0, "treasury:budget not created");
         _treasury.budget = _treasury.budget - _amount;
