@@ -16,13 +16,11 @@ describe('RahatDonor', function () {
     user = userAddr;
     project = projectAdr;
   });
+  
 
   describe('Deployment', function () {
     it('Should deploy RahatDonor contract', async function () {
       rahatDonorContract = await ethers.deployContract('RahatDonor', [admin.address]);
-
-      // Check if the contract is deployed successfully
-      //   expect(await rahatDonorContract.owner()).to.equal(admin.address);
     });
 
     it('Should deploy RahatToken contract', async function () {
@@ -82,8 +80,26 @@ describe('RahatDonor', function () {
         );
 
       // Check if the project balance is updated
-      //   const projectBalance = await rahatTokenContract.balanceOf(user.address);
-      //   expect(projectBalance).to.equal(mintAmount);
+        const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+        expect(projectBalance).to.equal(mintAmount);
+    });
+
+    it('Should mint tokens, approve project and update description', async function () {
+      const initialContractBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+      const mintAmount = 100n;
+      await rahatDonorContract
+        .connect(admin)
+        .registerProject(await elProjectContract.getAddress(), true);
+
+        await rahatDonorContract
+        .connect(admin)
+        ['mintTokenAndApprove(address, address, uint256, string)'](await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description');
+
+      // Check if the project balance is updated
+        const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+        expect(projectBalance).to.equal(initialContractBalance + mintAmount);
     });
   });
+
+  
 });

@@ -27,7 +27,6 @@ describe('RahatToken', function () {
         18,
       ]);
 
-      // Check if the contract is deployed successfully
       expect(await rahatTokenContract.name()).to.equal('RahatToken');
       expect(await rahatTokenContract.symbol()).to.equal('RAHAT');
       expect(await rahatTokenContract.decimals()).to.equal(18);
@@ -37,7 +36,6 @@ describe('RahatToken', function () {
       const newDescription = 'New token description';
       await rahatTokenContract.connect(admin).updateDescription(newDescription);
 
-      // Check if the description is updated successfully
       expect(await rahatTokenContract.description()).to.equal(newDescription);
     });
 
@@ -45,7 +43,6 @@ describe('RahatToken', function () {
       mintAmount = 100;
       await rahatTokenContract.connect(admin).mint(user.address, mintAmount);
 
-      // Check if the user balance is updated
       const userBalance = await rahatTokenContract.balanceOf(user.address);
       expect(userBalance).to.equal(100);
     });
@@ -58,7 +55,6 @@ describe('RahatToken', function () {
         .connect(admin)
         ['mint(address,uint256,string)'](user2.address, mintAmount, newDescription);
 
-      // Check if the user balance and token description is updated
       const userBalance = await rahatTokenContract.balanceOf(user2.address);
       expect(userBalance).to.equal(100);
       expect(await rahatTokenContract.description()).to.equal(newDescription);
@@ -70,9 +66,20 @@ describe('RahatToken', function () {
 
       await rahatTokenContract.connect(admin).burnFrom(user.address, burnAmount);
 
-      // Check if the user balance is updated after burning
       const userBalance = await rahatTokenContract.balanceOf(user.address);
       expect(userBalance).to.equal(mintAmount - burnAmount);
     });
+
+    it('Should revert if non-owner tries to mint tokens', async function () {
+      const nonOwner = user;
+      const mintAmount = 500;
+      await expect(
+        rahatTokenContract.connect(nonOwner).mint(user2.address, mintAmount)
+      ).to.be.revertedWith('Only owner can execute this transaction');
+    
+      const user2Balance = await rahatTokenContract.balanceOf(user2.address);
+      expect(user2Balance).to.equal(100);
+    });
+
   });
 });
