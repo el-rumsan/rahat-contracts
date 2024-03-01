@@ -16,7 +16,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     //Events
-    event ClaimAssigned(address indexed beneficiary,address tokenAddress);
+    event ClaimAssigned(address indexed beneficiary,address tokenAddress,address assigner);
     event ClaimProcessed(address indexed beneficiary,address indexed vendor, address indexed token);
     event VendorAllowance(address indexed vendor, address indexed token );
     event VendorAllowanceAccept(address indexed vendor, address indexed token);
@@ -187,7 +187,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can only be called by project admin when project is open and voucher should be registered to project
     function assignClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken) onlyAdmin(msg.sender){
         _addBeneficiary(_claimerAddress);
-        _assignClaims(_claimerAddress, defaultToken,eyeVoucherAssigned); 
+        _assignClaims(_claimerAddress, defaultToken,eyeVoucherAssigned,msg.sender); 
         eyeVoucherAssigned++;
         beneficiaryEyeVoucher[_claimerAddress] = defaultToken;
     }
@@ -199,7 +199,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
         require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
         require(checkVendorStatus(msg.sender),'vendor not approved');
-        _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned);
+        _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned,msg.sender);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
     }
@@ -209,10 +209,10 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress address of the voucher to assign
     ///@param _tokenAssigned amount of token assigned till date
     ///@dev internal function to assign claims
-    function _assignClaims(address _beneficiary, address _tokenAddress, uint256 _tokenAssigned) private {
+    function _assignClaims(address _beneficiary, address _tokenAddress, uint256 _tokenAssigned,address _assigner) private {
         uint256 remainingBudget = tokenBudget(_tokenAddress);
         require(remainingBudget > _tokenAssigned,'token budget exceed');
-        emit ClaimAssigned(_beneficiary, _tokenAddress);
+        emit ClaimAssigned(_beneficiary, _tokenAddress,_assigner);
 
     }
 
@@ -233,12 +233,12 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
         requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress);
     }
 
-    ///@notice internal function to request  voucher claim process
+    ///@notice  function to request  voucher claim process
     ///@param _benAddress address of beneficiary
     ///@param _tokenAddress address of voucher
     ///@param _otpServer address responsible for otp
     ///@dev can be called only when project is open
-    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) internal  onlyOpen() returns(uint256 requestId) {
+    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) public  onlyOpen() returns(uint256 requestId) {
         require(otpServerAddress != address(0), 'invalid otp-server');
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'Voucher already claimed');
         //need to check total budget
@@ -325,7 +325,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     }
     ///@notice function to get the project voucher details
-    ///@return voucherDetails struct storing all voucher details
+    ///@return projectVoucherDetails struct storing all voucher details
     ///@dev getter function to get all voucher details of project
     function getProjectVoucherDetail() public view returns(ProjectVoucherDetails memory projectVoucherDetails){
         projectVoucherDetails = ProjectVoucherDetails({

@@ -53,7 +53,7 @@ describe('------ ElProjectFlow Tests ------', function () {
             forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
             eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
             referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress()]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress(),3]);
             await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(),true);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
@@ -95,7 +95,7 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
     
         it("Should assign referred voucher claims to the beneficiaries", async function(){
-            await elProjectContract.assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
+            await elProjectContract.connect(ven1).assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
             expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
