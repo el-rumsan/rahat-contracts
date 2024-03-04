@@ -293,7 +293,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can only be called by admin.Mainly called during minting of vouchers
     function increaseTokenBudget(uint256 _amount, address _tokenAddress) onlyOpen() onlyAdmin(msg.sender) public override{
         uint256 budget = tokenBudget(_tokenAddress);
-        require(IERC20(_tokenAddress).totalSupply()>= budget+_amount);
+        require(IERC20(_tokenAddress).totalSupply()>= budget+_amount, 'Greater than total supply');
         _tokenBudgetIncrease(_tokenAddress, _amount);
     }
 

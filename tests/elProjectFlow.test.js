@@ -26,20 +26,25 @@ describe('------ ElProjectFlow Tests ------', function () {
     let deployer
     let ben1;
     let ben2;
+    let notRegisteredBen;
     let ven1;
+    let notApprovedVen;
     let eyeTokenContract;
     let referredTokenContract;
     let elProjectContract;
     let rahatDonorContract;
     let rahatClaimContract;
     let forwarderContract;
+    let address0 = '0x0000000000000000000000000000000000000000';
 
     before(async function (){
-         const [addr1, addr2,addr3,addr4] = await ethers.getSigners();
+         const [addr1, addr2,addr3,addr4, addr5, addr6] = await ethers.getSigners();
          deployer = addr1;
          ben1 = addr2;
          ben2 = addr3;
          ven1 = addr4;
+         notRegisteredBen = addr5;
+         notApprovedVen = addr6;
     });
 
     describe('Deployment', function(){
@@ -49,7 +54,7 @@ describe('------ ElProjectFlow Tests ------', function () {
             forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
             eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
             referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress(),3]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress(),1]);
             await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(),true);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
@@ -137,7 +142,7 @@ describe('------ ElProjectFlow Tests ------', function () {
 
         it("Should transfer claimed token from vendor to project contract", async function(){
             const projectBalanceBefore = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
-            const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),1]);
+            const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),3]);
             const tx = await forwarderContract.execute(request);
             await tx.wait();
             await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address);
@@ -159,5 +164,180 @@ describe('------ ElProjectFlow Tests ------', function () {
 
         })
 
+        // Revert case for Add Referred Beneficiaries
+        it("Should revert if beneficiary being referred is not registered", async function(){
+            await expect(
+                elProjectContract.addReferredBeneficiaries(
+                    ben1.address,
+                    notRegisteredBen.address,
+                    ven1.address
+                )
+            ).to.be.revertedWith('referrer ben not registered');
+        });
+        
+        it("Should revert if referring vendor is not approved", async function(){
+            await expect(
+                elProjectContract.connect(notApprovedVen).addReferredBeneficiaries(
+                    ben2.address, 
+                    ben1.address, 
+                    notApprovedVen.address 
+                )
+            ).to.be.revertedWith('vendor not approved');
+        });
+        
+        it("Should revert if referral limit is reached for referring beneficiary", async function(){
+            elProjectContract.connect(ven1).addReferredBeneficiaries(
+                ben2.address,
+                ben1.address,
+                ven1.address
+            )
+            await expect(
+                elProjectContract.connect(ven1).addReferredBeneficiaries(
+                    ben2.address,
+                    ben1.address,
+                    ven1.address
+                )
+            ).to.be.revertedWith('referral:limit hit');
+        });
+        
+        // Revert case for Removed Referred Beneficiaries
+        it("Should revert if beneficiary being removed is not a referred beneficiary", async function(){
+            await expect(
+                elProjectContract.removeReferredBeneficiaries(
+                    notRegisteredBen.address
+                )
+            ).to.be.revertedWith('referrer ben not registered');
+        });
+
+        // Revert case of Assign Referred Claims
+        it("Should revert if claimer is not referred", async function(){
+            await expect(
+                elProjectContract.connect(ven1).assignRefereedClaims(
+                    ben1.address,
+                    await referredTokenContract.getAddress()
+                )
+            ).to.be.revertedWith('claimer not referred');
+        });
+        
+        // Revert case for reverted claims
+        it("Should revert if token is not assigned to the claimer", async function(){
+            await expect(
+                elProjectContract.revertedClaims(
+                    notRegisteredBen.address
+                )
+            ).to.be.revertedWith('Token not assigned');
+        });
+
+        // Revert case for reverted referred claims
+        it("Should revert if referred token is not assigned to the claimer", async function(){
+            await expect(
+                elProjectContract.revertedRefereedClaims(
+                    ben1.address,
+                    await referredTokenContract.getAddress()
+                )
+            ).to.be.revertedWith('Token not assigned');
+        });
+        
+        // Revert case for request token and refereed token from beneficiary
+        it("Should revert if eye voucher is not assigned to the beneficiary", async function(){
+            await expect(
+                elProjectContract.requestTokenFromBeneficiary(
+                    notRegisteredBen.address
+                )
+            ).to.be.revertedWith('eye voucher not assigned');
+        });
+        
+        it("Should revert if eye voucher is not assigned to the beneficiary", async function(){
+            await expect(
+                elProjectContract.requestReferredTokenFromBeneficiary(
+                    notRegisteredBen.address,
+                    await referredTokenContract.getAddress()
+                )
+            ).to.be.revertedWith('referred voucher not assigned');
+        });
+
+        // Revert case for Request Token From Beneficiary
+        // it("Should revert if OTP server address is invalid", async function(){
+        //     await expect(
+        //         elProjectContract['requestTokenFromBeneficiary(address,address,address)'](
+        //             ben1.address,
+        //             await eyeTokenContract.getAddress(),
+        //             address0
+        //             )
+        //     ).to.be.revertedWith('invalid otp-server');
+
+        // });
+        
+        it("Should revert if voucher is already claimed by the beneficiary", async function(){        
+            await expect(
+                elProjectContract.requestTokenFromBeneficiary(
+                    ben1.address,
+                    await eyeTokenContract.getAddress(), 
+                    deployer.address
+                )
+            ).to.be.revertedWith('Voucher already claimed');
+        });        
+
+        // Revert case while increasing token budget
+        it("Should revert if voucher is already claimed by the beneficiary", async function(){        
+            await expect(
+                elProjectContract.increaseTokenBudget(
+                    1000,
+                    await eyeTokenContract.getAddress(),
+                )
+            ).to.be.revertedWith('Greater than total supply');
+        });
+
+
+        // Revert case for transfer token to claimer
+        // it("Should revert if voucher is already claimed by the beneficiary", async function(){
+        
+        //     await expect(
+        //         elProjectContract['_transferTokenToClaimer(address,address,address)'](
+        //             await eyeTokenContract.getAddress(),
+        //             ben1.address,
+        //             ven1
+        //             )
+        //     ).to.be.revertedWith('voucher already claimed');
+        // });
+
+
+        // Revert case to update OTP server
+
+        it("Should revert if address is address 0", async function(){        
+            await expect(
+                elProjectContract.updateOtpServer(
+                    address0
+                )
+            ).to.be.revertedWith('invalid address');
+        });
+
+        it("Should revert if address is contract address", async function(){        
+            await expect(
+                elProjectContract.updateOtpServer(
+                    await elProjectContract.getAddress()
+                )
+            ).to.be.revertedWith('cannot be contract address');
+        });
+        
+        it("Should revert if address is current OTP address", async function(){        
+            await expect(
+                elProjectContract.updateOtpServer(
+                  deployer.address
+                )
+            ).to.be.revertedWith('no change');
+        });
+
+
+        // Revert Case for redeem token by vendor
+        it("Should revert if vendor has insufficient balance", async function(){        
+            await expect(
+                elProjectContract.redeemTokenByVendor(
+                  await eyeTokenContract.getAddress(),
+                  1000,
+                  ven1
+                )
+            ).to.be.revertedWith('Insufficient balance');
+        });
 })
 })
