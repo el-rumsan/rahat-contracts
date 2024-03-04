@@ -22,7 +22,7 @@ describe('RahatDonor', function () {
     it('Should deploy RahatDonor contract', async function () {
       rahatDonorContract = await ethers.deployContract('RahatDonor', [admin.address]);
     });
-
+       
     it('Should deploy RahatToken contract', async function () {
       const forwarderContract = await ethers.deployContract('ERC2771Forwarder', [
         'Rumsan Forwarder',
@@ -58,6 +58,7 @@ describe('RahatDonor', function () {
         await rahatClaimContract.getAddress(),
         deployer.address,
         await forwarderContract.getAddress(),
+        10
       ]);
       await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(), true);
     });

@@ -13,7 +13,6 @@ async function getMetaTxRequest(signer, forwarderContract, storageContract, func
         data: storageContract.interface.encodeFunctionData(functionName, params),
       },
     )
-  
   }
 
 async function getHash(otp){
@@ -22,7 +21,6 @@ async function getHash(otp){
     return keecakHash;
     
 }
-
 
 describe('------ ElProjectFlow Tests ------', function () {
     let deployer
@@ -35,8 +33,6 @@ describe('------ ElProjectFlow Tests ------', function () {
     let rahatDonorContract;
     let rahatClaimContract;
     let forwarderContract;
-
-
 
     before(async function (){
          const [addr1, addr2,addr3,addr4] = await ethers.getSigners();
@@ -53,7 +49,7 @@ describe('------ ElProjectFlow Tests ------', function () {
             forwarderContract = await ethers.deployContract("ERC2771Forwarder",["Rumsan Forwarder"]);
             eyeTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'EyeToken', 'EYE',await rahatDonorContract.getAddress(),1]);
             referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
-            elProjectContract = await ethers.deployContract('ELProject', ["ELProject",await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address,await forwarderContract.getAddress()]);
+            elProjectContract = await ethers.deployContract('ELProject', ["ELProject", await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await rahatClaimContract.getAddress(), deployer.address, await forwarderContract.getAddress(), 3]);
             await elProjectContract.updateAdmin(await rahatDonorContract.getAddress(),true);
             rahatDonorContract.registerProject(await elProjectContract.getAddress(),true);
            
@@ -66,7 +62,7 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect(Number(eyeTotalSupply)).to.equal(1000);
             expect(Number(await referredTokenContract.totalSupply())).to.equal(3000);  
         })
-
+  
         it("Should add beneficiary", async function(){
             await elProjectContract.addBeneficiary(ben1.address);
             expect(await elProjectContract.isBeneficiary(ben1.address)).to.equal(true);
@@ -83,6 +79,8 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect (await elProjectContract.beneficiaryEyeVoucher(ben1.address)).to.equal(await eyeTokenContract.getAddress());
             expect(await elProjectContract.beneficiaryClaimStatus(ben1.address,await eyeTokenContract.getAddress())).to.equal(false);
         })
+
+
         it("Should refer the new beneficiaries", async function(){
             await elProjectContract.addReferredBeneficiaries(ben2.address,ben1.address,ven1.address);
             const referredBeneficiary = await elProjectContract.referredBenficiaries(ben2.address);
@@ -94,8 +92,9 @@ describe('------ ElProjectFlow Tests ------', function () {
             expect(Number(benList.referredBen)).to.equal(1);
         })
     
+
         it("Should assign referred voucher claims to the beneficiaries", async function(){
-            await elProjectContract.assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
+            await elProjectContract.connect(ven1).assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
             expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
@@ -146,6 +145,19 @@ describe('------ ElProjectFlow Tests ------', function () {
 
         })
 
+        // Case for revert
+        it("Should revert if non-admin calls only Admin Functions", async function(){
+            await expect(
+                rahatDonorContract.connect(ben1)['mintTokenAndApprove(address,address,uint256,string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses")
+              ).to.be.revertedWith('Only owner can execute this transaction');
+
+            await expect(elProjectContract.connect(ben1).addBeneficiary(ben1.address)).to.be.revertedWith('not an admin');
+
+            await expect(elProjectContract.connect(ben1).updateVendor(ben1.address, true)).to.be.revertedWith('not an admin')
+
+            await expect(elProjectContract.connect(ben1).assignClaims(ben1.address)).to.be.revertedWith('not an admin')
+
+        })
 
 })
 })
