@@ -245,7 +245,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can be called only when project is open
     function requestTokenFromBeneficiary(address _benAddress) public onlyOpen() override returns(uint256 requestId){
         require(beneficiaryEyeVoucher[_benAddress] == defaultToken,'eye voucher not assigned');
-        requestId = requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress);
+        requestId = requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress,_msgSender());
     }
 
     ///@notice function to request referred voucher claim process
@@ -254,7 +254,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can be called only when project is open
     function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override onlyOpen() returns(uint256 requestId){
         require(beneficiaryReferredVoucher[_benAddress] == _tokenAddress,'referred voucher not assigned');
-        requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress);
+        requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress,_msgSender());
     }
 
     ///@notice  function to request  voucher claim process
@@ -262,17 +262,17 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress address of voucher
     ///@param _otpServer address responsible for otp
     ///@dev can be called only when project is open
-    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) public  onlyOpen() returns(uint256 requestId) {
+    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer,address _vendor) internal  onlyOpen() returns(uint256 requestId) {
         require(otpServerAddress != address(0), 'invalid otp-server');
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'Voucher already claimed');
         //need to check total budget
 
         requestId = RahatClaim.createClaim(
-            _msgSender(),
+            _vendor,
             _benAddress,
             _otpServer,
             _tokenAddress);
-        tokenRequestIds[_msgSender()][_benAddress] = requestId;
+        tokenRequestIds[_vendor][_benAddress] = requestId;
         return requestId;
     }
 
