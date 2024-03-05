@@ -272,8 +272,8 @@ describe('------ ElProjectFlow Tests ------', function () {
             await expect(
                 elProjectContract.requestTokenFromBeneficiary(
                     ben1.address,
-                    await eyeTokenContract.getAddress(), 
-                    deployer.address
+                    // await eyeTokenContract.getAddress(), 
+                    // deployer.address
                 )
             ).to.be.revertedWith('Voucher already claimed');
         });        
