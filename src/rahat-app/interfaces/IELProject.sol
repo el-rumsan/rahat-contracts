@@ -62,11 +62,11 @@ interface IELProject is IERC165 {
     address _tokenAddress
   ) external returns (uint requestId);
 
-  function requestTokenFromBeneficiary(
-    address _benAddress,
-    address _tokenAddress,
-    address _otpServerAddress
-  ) external returns (uint requestId);
+  // function requestTokenFromBeneficiary(
+  //   address _benAddress,
+  //   address _tokenAddress,
+  //   address _otpServerAddress
+  // ) external returns (uint requestId);
 
   ///@dev Process token request to beneficiary by otp verfication
   function processTokenRequest(address _benAddress, string memory _otp) external;
