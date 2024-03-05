@@ -242,10 +242,10 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     ///@notice function to request free voucher claim process
     ///@param _benAddress address of beneficiary
-    ///@dev can be called only when project is open 
+    ///@dev can be called only when project is open
     function requestTokenFromBeneficiary(address _benAddress) public onlyOpen() override returns(uint256 requestId){
         require(beneficiaryEyeVoucher[_benAddress] == defaultToken,'eye voucher not assigned');
-        requestId = _requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress,msg.sender);
+        requestId = requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress);
     }
 
     ///@notice function to request referred voucher claim process
@@ -254,7 +254,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can be called only when project is open
     function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override onlyOpen() returns(uint256 requestId){
         require(beneficiaryReferredVoucher[_benAddress] == _tokenAddress,'referred voucher not assigned');
-        requestId = _requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress,msg.sender);
+        requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress);
     }
 
     ///@notice  function to request  voucher claim process
@@ -262,28 +262,26 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress address of voucher
     ///@param _otpServer address responsible for otp
     ///@dev can be called only when project is open
-    function _requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer,address _vendorAddress) internal onlyOpen() returns(uint256 requestId) {
+    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer) public  onlyOpen() returns(uint256 requestId) {
         require(otpServerAddress != address(0), 'invalid otp-server');
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'Voucher already claimed');
         //need to check total budget
 
         requestId = RahatClaim.createClaim(
-            _vendorAddress,
+            _msgSender(),
             _benAddress,
             _otpServer,
             _tokenAddress);
-        tokenRequestIds[msg.sender][_benAddress] = requestId;
+        tokenRequestIds[_msgSender()][_benAddress] = requestId;
         return requestId;
     }
-
-
 
     ///@notice function to process token after recieving otp. This is the last step for beneficiary during voucher claim process
     ///@param _benAddress address of the beneficiary
     ///@param _otp otp received by beneficiary
     function processTokenRequest(address _benAddress, string memory _otp)onlyOpen() public{
         IRahatClaim.Claim memory _claim = RahatClaim.processClaim(
-            tokenRequestIds[msg.sender][_benAddress],
+            tokenRequestIds[_msgSender()][_benAddress],
             _otp
         );
         _transferTokenToClaimer(_claim.tokenAddress, _claim.claimeeAddress,_claim.claimerAddress);
@@ -305,7 +303,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _vendorAddress address of vendor processing the claim
     ///@dev claimed voucher is transferred to vendor processing the claim
     function _transferTokenToClaimer(address _tokenAddress, address _benAddress, address _vendorAddress) private{
-        require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'voucher already claimed' );
+        // require(!beneficiaryClaimStatus[_benAddress][_tokenAddress],'voucher already claimed' );
         beneficiaryClaimStatus[_benAddress][_tokenAddress] = true;
         if(_tokenAddress == defaultToken) {eyeVoucherClaimed++;
         eyeVoucherRedeemedByVendor[_vendorAddress]++;

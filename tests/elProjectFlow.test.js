@@ -87,7 +87,12 @@ describe('------ ElProjectFlow Tests ------', function () {
 
 
         it("Should refer the new beneficiaries", async function(){
-            await elProjectContract.connect(ven1).addReferredBeneficiaries(ben2.address,ben1.address,ven1.address);
+            // await elProjectContract.connect(ven1).addReferredBeneficiaries(ben2.address,ben1.address,ven1.address);
+
+            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'addReferredBeneficiaries',[ben2.address,ben1.address,ven1.address]);
+            const tx = await forwarderContract.execute(request);
+
+            // const receipt = await tx.wait();
             const referredBeneficiary = await elProjectContract.referredBenficiaries(ben2.address);
             expect(referredBeneficiary[0]).to.equal(ben2.address);
             expect(referredBeneficiary[1]).to.equal(ven1.address);
@@ -106,11 +111,11 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should create the request for the claim", async function(){
-            const tx = await elProjectContract.connect(ven1).requestTokenFromBeneficiary(ben1.address);
-            const receipt = await tx.wait();
-            // const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'requestTokenFromBeneficiary',[ben1.address]);
-            // const tx = await forwarderContract.execute(request);
+            // const tx = await elProjectContract.connect(ven1).requestTokenFromBeneficiary(ben1.address);
             // const receipt = await tx.wait();
+            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'requestTokenFromBeneficiary',[ben1.address]);
+            const tx = await forwarderContract.execute(request);
+            const receipt = await tx.wait();
             const claimId = await receipt.logs[0].topics[1];
             expect(Number(claimId)).to.equal(1);
             expect(await elProjectContract.tokenRequestIds(ven1.address,ben1.address)).to.equal(1);
@@ -135,9 +140,8 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should process the otp and transfer the claimed token to vendor wallet", async function(){
-            const tx = await elProjectContract.connect(ven1).processTokenRequest(ben1.address,"1234");
-            // const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'processTokenRequest',[ben1.address,"1234"]);
-            // const tx = await forwarderContract.execute(request);
+            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'processTokenRequest',[ben1.address,"1234"]);
+            await forwarderContract.execute(request);
             const ven1Balance = await eyeTokenContract.balanceOf(ven1.address);
             expect(Number(ven1Balance)).to.equal(1);
             const eyeTokenRedeemed = await elProjectContract.eyeVoucherRedeemedByVendor(ven1.address);
