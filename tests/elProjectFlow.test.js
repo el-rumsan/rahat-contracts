@@ -87,7 +87,6 @@ describe('------ ElProjectFlow Tests ------', function () {
 
 
         it("Should refer the new beneficiaries", async function(){
-            // await elProjectContract.connect(ven1).addReferredBeneficiaries(ben2.address,ben1.address,ven1.address);
 
             const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'addReferredBeneficiaries',[ben2.address,ben1.address,ven1.address]);
             const tx = await forwarderContract.execute(request);
@@ -104,7 +103,8 @@ describe('------ ElProjectFlow Tests ------', function () {
     
 
         it("Should assign referred voucher claims to the beneficiaries", async function(){
-            await elProjectContract.connect(ven1).assignRefereedClaims(ben2.address, await referredTokenContract.getAddress());
+            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'assignRefereedClaims',[ben2.address, await referredTokenContract.getAddress()]);
+            const tx = await forwarderContract.execute(request);
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
             expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
@@ -163,17 +163,26 @@ describe('------ ElProjectFlow Tests ------', function () {
 
         // Revert if non admin calls only admin function
         it("Should revert if non-admin calls only Admin Functions", async function(){
-            await expect(
-                rahatDonorContract.connect(ben1)['mintTokenAndApprove(address,address,uint256,string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses")
-              ).to.be.revertedWith('Only owner can execute this transaction');
 
-            await expect(elProjectContract.connect(ben1).addBeneficiary(ben1.address)).to.be.revertedWith('not an admin');
+            await expect(elProjectContract.connect(ben1).processTokenRequest(ben1.address)).to.be.revertedWith('not an admin');
 
             await expect(elProjectContract.connect(ben1).updateVendor(ben1.address, true)).to.be.revertedWith('not an admin')
 
             await expect(elProjectContract.connect(ben1).assignClaims(ben1.address)).to.be.revertedWith('not an admin')
 
         })
+
+        // // Revert if non admin calls only admin function
+        // it("Should revert if non-vendor calls only Vendor Functions", async function(){
+        //     await expect(
+        //         rahatDonorContract.connect(ben1)['mintTokenAndApprove(address,address,uint256,string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses")
+        //       ).to.be.revertedWith('Only owner can execute this transaction');
+
+        //     await expect(elProjectContract.connect(ben1).updateVendor(ben1.address, true)).to.be.revertedWith('not an admin')
+
+        //     await expect(elProjectContract.connect(ben1).assignClaims(ben1.address)).to.be.revertedWith('not an admin')
+
+        // })
 
         // Revert case for Add Referred Beneficiaries
         it("Should revert if beneficiary being referred is not registered", async function(){

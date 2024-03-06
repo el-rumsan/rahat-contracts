@@ -204,7 +204,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can only be called by project vendors when project is open and voucher should be registered to project
     function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
         require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
-        require(checkVendorStatus(msg.sender),'vendor not approved');
+        require(checkVendorStatus(_msgSender()),'vendor not approved');
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned,msg.sender);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;
@@ -279,7 +279,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to process token after recieving otp. This is the last step for beneficiary during voucher claim process
     ///@param _benAddress address of the beneficiary
     ///@param _otp otp received by beneficiary
-    function processTokenRequest(address _benAddress, string memory _otp)onlyOpen() public{
+    function processTokenRequest(address _benAddress, string memory _otp)onlyOpen() OnlyVendor() public{
         IRahatClaim.Claim memory _claim = RahatClaim.processClaim(
             tokenRequestIds[_msgSender()][_benAddress],
             _otp
@@ -421,4 +421,9 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     {
         return ERC2771Context._contextSuffixLength();
     }
+
+    modifier OnlyVendor() {
+    require(checkVendorStatus(_msgSender()), 'Only vendor can execute this transaction');
+    _;
+  }
 }
