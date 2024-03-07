@@ -43,7 +43,7 @@ interface IELProject is IERC165 {
   ///@dev Add beneficiary to project with claim amount;
   function assignClaims(address _address) external;
 
-  function assignRefereedClaims(address _address, address _tokenAddress) external;
+  function assignRefereedClaims(address _address, address _referralben, address _referralVendor,address _tokenAddress) external;
 
   // function totalClaimsAssgined() external view returns (uint _totalClaims);
 

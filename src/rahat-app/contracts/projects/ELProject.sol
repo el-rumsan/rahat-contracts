@@ -200,11 +200,14 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     /// @notice function to assign referred voucher/claims to beneficiaries
     ///@param _claimerAddress address of beneficiaires to assign claims
+    ///@param _referralben address of referral beneficairy(referral- one referring the new beneficairy)
+    ///@param _referralVendor address of referral vendor
     ///@param _refereedToken address of referred voucher
     ///@dev can only be called by project vendors when project is open and voucher should be registered to project
-    function assignRefereedClaims(address _claimerAddress,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){        
-        require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
+    function assignRefereedClaims(address _claimerAddress,address _referralben, address _referralVendor,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){  
         require(checkVendorStatus(_msgSender()),'vendor not approved');
+        if(!_referredBeneficiaries.contains(_claimerAddress)) addReferredBeneficiaries(_claimerAddress,_referralben,_referralVendor);  
+        // require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned,msg.sender);
         referredVoucherAssigned++;
         beneficiaryReferredVoucher[_claimerAddress] = _refereedToken;

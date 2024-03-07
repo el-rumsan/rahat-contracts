@@ -86,12 +86,25 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
 
-        it("Should refer the new beneficiaries", async function(){
+        // it("Should refer the new beneficiaries", async function(){
 
-            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'addReferredBeneficiaries',[ben2.address,ben1.address,ven1.address]);
+        //     const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'addReferredBeneficiaries',[ben2.address,ben1.address,ven1.address]);
+        //     const tx = await forwarderContract.execute(request);
+
+        //     // const receipt = await tx.wait();
+            // const referredBeneficiary = await elProjectContract.referredBenficiaries(ben2.address);
+            // expect(referredBeneficiary[0]).to.equal(ben2.address);
+            // expect(referredBeneficiary[1]).to.equal(ven1.address);
+            // expect(referredBeneficiary[2]).to.equal(ben1.address);
+            // const benList = await elProjectContract.getTotalBeneficiaries();
+            // expect(Number(benList.enrolledBen)).to.equal(1);
+            // expect(Number(benList.referredBen)).to.equal(1);
+        // })
+    
+
+        it("Should assign referred voucher claims to the beneficiaries", async function(){
+            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'assignRefereedClaims',[ben2.address,ben1.address, ven1.address,await referredTokenContract.getAddress()]);
             const tx = await forwarderContract.execute(request);
-
-            // const receipt = await tx.wait();
             const referredBeneficiary = await elProjectContract.referredBenficiaries(ben2.address);
             expect(referredBeneficiary[0]).to.equal(ben2.address);
             expect(referredBeneficiary[1]).to.equal(ven1.address);
@@ -99,12 +112,6 @@ describe('------ ElProjectFlow Tests ------', function () {
             const benList = await elProjectContract.getTotalBeneficiaries();
             expect(Number(benList.enrolledBen)).to.equal(1);
             expect(Number(benList.referredBen)).to.equal(1);
-        })
-    
-
-        it("Should assign referred voucher claims to the beneficiaries", async function(){
-            const request = await getMetaTxRequest(ven1, forwarderContract, elProjectContract, 'assignRefereedClaims',[ben2.address, await referredTokenContract.getAddress()]);
-            const tx = await forwarderContract.execute(request);
             expect(Number(await elProjectContract.referredVoucherAssigned())).to.equal(1);
             expect (await elProjectContract.beneficiaryReferredVoucher(ben2.address)).to.equal(await referredTokenContract.getAddress());
             expect(await elProjectContract.beneficiaryClaimStatus(ben2.address,await referredTokenContract.getAddress())).to.equal(false);
@@ -164,7 +171,7 @@ describe('------ ElProjectFlow Tests ------', function () {
         // Revert if non admin calls only admin function
         it("Should revert if non-admin calls only Admin Functions", async function(){
 
-            await expect(elProjectContract.connect(ben1).processTokenRequest(ben1.address)).to.be.revertedWith('not an admin');
+            await expect(elProjectContract.connect(ben1).processTokenRequest(ben1.address,'123456')).to.be.revertedWith('Only vendor can execute this transaction');
 
             await expect(elProjectContract.connect(ben1).updateVendor(ben1.address, true)).to.be.revertedWith('not an admin')
 
@@ -230,14 +237,14 @@ describe('------ ElProjectFlow Tests ------', function () {
         });
 
         // Revert case of Assign Referred Claims
-        it("Should revert if claimer is not referred", async function(){
-            await expect(
-                elProjectContract.connect(ven1).assignRefereedClaims(
-                    ben1.address,
-                    await referredTokenContract.getAddress()
-                )
-            ).to.be.revertedWith('claimer not referred');
-        });
+        // it("Should revert if claimer is not referred", async function(){
+        //     await expect(
+        //         elProjectContract.connect(ven1).assignRefereedClaims(
+        //             ben1.address,
+        //             await referredTokenContract.getAddress()
+        //         )
+        //     ).to.be.revertedWith('claimer not referred');
+        // });
         
         // Revert case for reverted claims
         it("Should revert if token is not assigned to the claimer", async function(){
