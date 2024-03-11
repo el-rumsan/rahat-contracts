@@ -8,7 +8,8 @@
     "compile": "hardhat compile",
     "coverage": "hardhat coverage",
     "test": "hardhat test",
-    "prettier": "prettier --write 'src/contracts/**/*.sol'"
+    "prettier": "prettier --write 'src/contracts/**/*.sol'",
+    "deploy:contracts": "hardhat run scripts/deploy.js --network polygonMumbai"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
