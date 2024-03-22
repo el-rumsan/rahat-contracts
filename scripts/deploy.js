@@ -64,14 +64,14 @@ async function main(){
         console.log('-----register project in donor---')
         await donorContract.registerProject(elProjectAddress,true);
 
-    // writeToFile(`${__dirname}/deployments.json`, {
-    //     donorAddress,
-    //     claimAddress,
-    //     forwarderAddress,
-    //     eyeVoucherAddress,
-    //     referralVoucherAddress,
-    //     elProjectAddress,
-    // })
+    writeToFile(`${__dirname}/deployments.json`, {
+        donorAddress,
+        claimAddress,
+        forwarderAddress,
+        eyeVoucherAddress,
+        referralVoucherAddress,
+        elProjectAddress,
+    })
     await sleep(20000)
 
     console.log("Verifying Contracts")
@@ -88,21 +88,6 @@ async function main(){
     console.log('verifying el project')
     await verify(elProjectAddress,['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);
     console.log("verification completed")
-
-    writeToFile(`${__dirname}/deployments.json`, {
-        donorAddress,
-        claimAddress,
-        forwarderAddress,
-        eyeVoucherAddress,
-        referralVoucherAddress,
-        elProjectAddress,
-    })
-
-    // console.log("---adding admin in el project----")
-    // await elProject.updateAdmin(donorAddress,true);
-    // console.log('-----register project in donor---')
-    // await donorContract.registerProject(elProjectAddress,true);
-
 
 }
 

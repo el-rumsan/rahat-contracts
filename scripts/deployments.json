@@ -1,8 +1,26 @@
-{
+[
+  {
     "donorAddress": "0x217A4bD7C3619B2d4Fd0625B1857fdCd9279d1b3",
     "claimAddress": "0x2B539E5cAe0b01728BF6fFcE1F17aEbb0Adbd39c",
     "eyeVoucherAddress": "0x1a134Beafb9D79064c8C318F233AD7f46fF49D78",
     "forwarderAddress": "0x726d03359E832932e18E0eeFDCfd3875080553D5",
     "referralVoucherAddress": "0x3BB2526e0B8f8bD46b0187Aa4d24b351cf434437",
     "elProjectAddress": "0x9C8Ee9931BEc18EA883c8F23c7427016bBDeF171"
+  },
+  {
+    "donorAddress": "0xf108B6d6E97F046e53a854505197078dCd9eA11c",
+    "claimAddress": "0xdeE0010F8bB5d40099fa98348498a6861b4E246a",
+    "forwarderAddress": "0x5335324De6D18A386A44F03B8bac60877c25513c",
+    "eyeVoucherAddress": "0x7b47FAB7cF1981464C84782216B0aB580c08faA4",
+    "referralVoucherAddress": "0xed225eCd57e4CF1813C74663CA812b7cbE01AAa3",
+    "elProjectAddress": "0xE2f640127f9E9B299551426D190DdAc56f0f462E"
+  },
+  {
+    "donorAddress": "0xb72Edc10170c61A0Bb85f9816Da05f368C719A9f",
+    "claimAddress": "0xec63637155b8738B070043B840b782A9EebAA6ee",
+    "forwarderAddress": "0x0f1aFa94EDb11392efCf54581FFB5DC967967846",
+    "eyeVoucherAddress": "0xc19d064Ac3C96aa3E1b2E5b0A8e248A1A8a15775",
+    "referralVoucherAddress": "0xC01d0B6B3CcCa78C5685B52859FB538Bd7b11483",
+    "elProjectAddress": "0x494073864D8187414c54796987dBFf4AA469A8D6"
   }
+]
