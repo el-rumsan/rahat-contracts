@@ -2,6 +2,8 @@ const {expect} = require('chai');
 const {ethers} = require('hardhat');
 
 const {signMetaTxRequest} = require("../utils/signer")
+const {getRandomEthAddress} = require("./common.js")
+const {generateMultiCallData} = require("../utils/signer.js")
 
 async function getMetaTxRequest(signer, forwarderContract, storageContract, functionName, params) {
     return signMetaTxRequest(
@@ -364,6 +366,35 @@ describe('------ ElProjectFlow Tests ------', function () {
                   ven1
                 )
             ).to.be.revertedWith('Insufficient balance');
+        });
+
+
+        // Multicall 
+        // Multicall for assign claim function
+        it("Should call assignClaim with multicall", async function(){  
+            const numberOfAddress = 6;      
+            const randomEthAddresses = getRandomEthAddress(numberOfAddress);
+            const multicallInfo = randomEthAddresses.map((row) => [row])
+            const multicallData = generateMultiCallData(elProjectContract, 'assignClaims', multicallInfo);
+            await elProjectContract.multicall(multicallData)
+            for(let i = 0; i < numberOfAddress; i++){
+                expect (await elProjectContract.beneficiaryEyeVoucher(randomEthAddresses[i])).to.equal(await eyeTokenContract.getAddress())
+            }
+        });
+
+        // Multicall 
+        it("Should call assignRefefferdClaim with multicall", async function(){  
+            // Register beneficiary
+            await elProjectContract.addBeneficiary(notRegisteredBen.address);
+            const numberOfAddress = 2;      
+            const randomEthAddresses = getRandomEthAddress(numberOfAddress);
+            const tokenAddress = await referredTokenContract.getAddress();
+            const multicallInfo = randomEthAddresses.map((row) => [row, notRegisteredBen.address, ven1.address, tokenAddress])
+            const multicallData = generateMultiCallData(elProjectContract, 'assignRefereedClaims', multicallInfo);
+            await elProjectContract.connect(ven1).multicall(multicallData)
+            for(let i = 0; i < numberOfAddress; i++){
+                expect (await elProjectContract.beneficiaryReferredVoucher(randomEthAddresses[i])).to.equal(await referredTokenContract.getAddress())
+            }
         });
 })
 })

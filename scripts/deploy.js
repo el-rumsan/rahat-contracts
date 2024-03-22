@@ -44,10 +44,10 @@ async function main(){
     const forwarder = await ethers.deployContract('ERC2771Forwarder',['ELForwarder']);
     const forwarderAddress = await forwarder.getAddress();
     console.log("deploying eye voucher")
-    const eyeVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'EyeVoucher','Eye',donorAddress,1]);
+    const eyeVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'EyeVoucher','Eye',donorAddress,1, 10, 'USD']);
     const eyeVoucherAddress = await eyeVoucher.getAddress();
     console.log("deploying referral voucher");
-    const referralVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1]);
+    const referralVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1, 10, 'USD']);
     const referralVoucherAddress = await referralVoucher.getAddress();
     console.log("deploying el project")
     const elProject = await ethers.deployContract('ELProject',['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);

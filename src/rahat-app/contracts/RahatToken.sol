@@ -13,23 +13,40 @@ import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771Context {
   uint8 private decimalPoints;
   string public description;
+  uint8 public price;
+  string public currency;
 
   event UpdatedDescription(address updatedBy, string description);
+  event UpdatedPrice(string currency, uint8 price);
 
   constructor(
     address _forwarder,
     string memory _name,
     string memory _symbol,
     address _admin,
-    uint8 _decimals
+    uint8 _decimals,
+    _price,
+    _currency
   ) ERC20(_name, _symbol) ERC2771Context(address(_forwarder)) {
     _addOwner(_admin);
     decimalPoints = _decimals;
+    price = _price;
+    currency = _currency;
   }
+
 
   ///@dev returns the decimals of the tokens
   function decimals() public view override returns (uint8) {
     return decimalPoints;
+  }
+
+  ///@dev Update price and currency of token
+  ///@param _currency Currency to which token will be change
+  ///@param _price Price of currency 
+  function updatePrice(string _currency, uint8 _price) public OnlyOwner() {
+    price = _price,
+    currency = _currency,
+    emit UpdatedPrice(price, currency);
   }
 
   ///@dev Mint x amount of ERC20 token to given address

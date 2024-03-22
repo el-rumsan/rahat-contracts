@@ -1,5 +1,7 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
+const {getRandomDonorData} = require("./common.js")
+const {generateMultiCallData} = require("../utils/signer.js")
 
 describe('RahatDonor', function () {
   let deployer;
@@ -100,6 +102,19 @@ describe('RahatDonor', function () {
         const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
         expect(projectBalance).to.equal(initialContractBalance + mintAmount);
     });
+
+    it('Should multicall mint tokens, approve project and update description', async function () {
+      const initialContractBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+      const mintAmount = 100n;
+
+      const multicallInfo = getRandomDonorData(await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description')
+
+      const multicallData = generateMultiCallData(rahatDonorContract, 'mintTokenAndApprove(address, address, uint256, string)', multicallInfo);
+      await rahatDonorContract.connect(admin).multicall(multicallData)
+        const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+        expect(projectBalance).to.equal(initialContractBalance + 5n*mintAmount);
+    });
+
   });
 
   
