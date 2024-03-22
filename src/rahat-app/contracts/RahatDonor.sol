@@ -76,7 +76,7 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
   }
 
-  function mintTokenAndApprove(
+  function mintTokenAndApproveDescription(
     address _token,
     address _projectAddress,
     uint256 _amount,
