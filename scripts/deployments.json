@@ -22,5 +22,13 @@
     "eyeVoucherAddress": "0xc19d064Ac3C96aa3E1b2E5b0A8e248A1A8a15775",
     "referralVoucherAddress": "0xC01d0B6B3CcCa78C5685B52859FB538Bd7b11483",
     "elProjectAddress": "0x494073864D8187414c54796987dBFf4AA469A8D6"
+  },
+  {
+    "donorAddress": "0xA69f271c08700771765D911540D912C086f42F57",
+    "claimAddress": "0xD9bCd117d1e6A880A6783FEC127DB516BB9Cc3C4",
+    "forwarderAddress": "0xD61754127C76DCfdd0AE3a94acd7b06E2BFEf15A",
+    "eyeVoucherAddress": "0xC8A8032fc777b9Ad39C57a0eBaBbFA0b630825a0",
+    "referralVoucherAddress": "0xd7F992c60F8FDE06Df0b93276E2e43eb6555a5FA",
+    "elProjectAddress": "0x1B4D9FA12f3e1b1181b413979330c0afF9BbaAE5"
   }
 ]

@@ -1,7 +1,6 @@
 const { ethers, run, upgrades } = require("hardhat");
 const { writeFileSync, readFileSync } = require('fs');
 
-
 const verify = async (contractAddress, args) => {
     console.log("Verifying contract...");
     try {
@@ -32,62 +31,67 @@ const writeToFile = (filePath, newData) => {
 }
 
 async function main(){
+
     const [deployer] = await ethers.getSigners();
-    console.log("---deploying rahat donor------")
-    const donorContract = await ethers.deployContract('RahatDonor',[deployer.address])
-    const donorAddress = await donorContract.getAddress();
-    console.log("deployed rahat donor")
-    console.log("Deploying rahat claim")
-    const rahatclaim = await ethers.deployContract('RahatClaim');
-    const claimAddress = await rahatclaim.getAddress();
-    console.log("deploying forwarder contract")
-    const forwarder = await ethers.deployContract('ERC2771Forwarder',['ELForwarder']);
-    const forwarderAddress = await forwarder.getAddress();
-    console.log("deploying eye voucher")
-    const eyeVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'EyeVoucher','Eye',donorAddress,1, 10, 'USD']);
-    const eyeVoucherAddress = await eyeVoucher.getAddress();
-    console.log("deploying referral voucher");
-    const referralVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1, 10, 'USD']);
-    const referralVoucherAddress = await referralVoucher.getAddress();
-    console.log("deploying el project")
-    const elProject = await ethers.deployContract('ELProject',['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);
-    const elProjectAddress = await elProject.getAddress();
-    console.log({donorAddress,
-        claimAddress,
-        eyeVoucherAddress,
-        forwarderAddress,
-        referralVoucherAddress,
-        elProjectAddress,})
+    const elProject = await ethers.getContractFactory('ELProject')
+    const elContract = await elProject.attach('0x1B4D9FA12f3e1b1181b413979330c0afF9BbaAE5')
 
-        console.log("---adding admin in el project----")
-        await elProject.updateAdmin(donorAddress,true);
-        console.log('-----register project in donor---')
-        await donorContract.registerProject(elProjectAddress,true);
+    console.log(await elContract.updateAdmin("0xA69f271c08700771765D911540D912C086f42F57", true))
+    // console.log("---deploying rahat donor------")
+    // const donorContract = await ethers.deployContract('RahatDonor',[deployer.address])
+    // const donorAddress = await donorContract.getAddress();
+    // console.log("deployed rahat donor")
+    // console.log("Deploying rahat claim")
+    // const rahatclaim = await ethers.deployContract('RahatClaim');
+    // const claimAddress = await rahatclaim.getAddress();
+    // console.log("deploying forwarder contract")
+    // const forwarder = await ethers.deployContract('ERC2771Forwarder',['ELForwarder']);
+    // const forwarderAddress = await forwarder.getAddress();
+    // console.log("deploying eye voucher")
+    // const eyeVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'EyeVoucher','Eye',donorAddress,1]);
+    // const eyeVoucherAddress = await eyeVoucher.getAddress();
+    // console.log("deploying referral voucher");
+    // const referralVoucher = await ethers.deployContract('RahatToken',[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1]);
+    // const referralVoucherAddress = await referralVoucher.getAddress();
+    // console.log("deploying el project")
+    // const elProject = await ethers.deployContract('ELProject',['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress, process.env.OTP_SERVER_ADDRESS,forwarderAddress,3]);
+    // const elProjectAddress = await elProject.getAddress();
+    // console.log({donorAddress,
+    //     claimAddress,
+    //     eyeVoucherAddress,
+    //     forwarderAddress,
+    //     referralVoucherAddress,
+    //     elProjectAddress,})
 
-    writeToFile(`${__dirname}/deployments.json`, {
-        donorAddress,
-        claimAddress,
-        forwarderAddress,
-        eyeVoucherAddress,
-        referralVoucherAddress,
-        elProjectAddress,
-    })
-    await sleep(20000)
+    //     console.log("---adding admin in el project----")
+    //     await elProject.updateAdmin(donorAddress,true);
+    //     console.log('-----register project in donor---')
+    //     await donorContract.registerProject(elProjectAddress,true);
 
-    console.log("Verifying Contracts")
-    console.log("Verifiying Rahat Donor")
-    await verify(donorAddress,[deployer.address]);
-    console.log("Verifying Rahat claim")
-    await verify(claimAddress);
-    console.log('veriying forwarder')
-    await verify(forwarderAddress,['ELForwarder'])
-    console.log('verfiying eye voucher')
-    await verify(eyeVoucher,[forwarderAddress,'EyeVoucher','Eye',donorAddress,1])
-    console.log('verifying referral voucher')
-    await verify(referralVoucherAddress,[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1]);
-    console.log('verifying el project')
-    await verify(elProjectAddress,['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);
-    console.log("verification completed")
+    // writeToFile(`${__dirname}/deployments.json`, {
+    //     donorAddress,
+    //     claimAddress,
+    //     forwarderAddress,
+    //     eyeVoucherAddress,
+    //     referralVoucherAddress,
+    //     elProjectAddress,
+    // })
+    // await sleep(20000)
+
+    // console.log("Verifying Contracts")
+    // console.log("Verifiying Rahat Donor")
+    // await verify(donorAddress,[deployer.address]);
+    // console.log("Verifying Rahat claim")
+    // await verify(claimAddress);
+    // console.log('veriying forwarder')
+    // await verify(forwarderAddress,['ELForwarder'])
+    // console.log('verfiying eye voucher')
+    // await verify(eyeVoucher,[forwarderAddress,'EyeVoucher','Eye',donorAddress,1])
+    // console.log('verifying referral voucher')
+    // await verify(referralVoucherAddress,[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1]);
+    // console.log('verifying el project')
+    // await verify(elProjectAddress,['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);
+    // console.log("verification completed")
 
 }
 

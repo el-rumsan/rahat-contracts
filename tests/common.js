@@ -12,11 +12,11 @@ function getRandomEthAddress(length) {
 
 function getRandomDonorData(tokenAddress, projectAddress, mintAmount, description) {
     return [
-        [tokenAddress, projectAddress, mintAmount, `${description} - 1`],
-        [tokenAddress, projectAddress, mintAmount, `${description} - 2`],
-        [tokenAddress, projectAddress, mintAmount, `${description} - 3`],
-        [tokenAddress, projectAddress, mintAmount, `${description} - 4`],
-        [tokenAddress, projectAddress, mintAmount, `${description} - 5`],
+        [tokenAddress, projectAddress, mintAmount, `${description} - 1`, 10, 'USD'],
+        [tokenAddress, projectAddress, mintAmount, `${description} - 2`, 10, 'USD'],
+        [tokenAddress, projectAddress, mintAmount, `${description} - 3`, 10, 'USD'],
+        [tokenAddress, projectAddress, mintAmount, `${description} - 4`, 10, 'USD'],
+        [tokenAddress, projectAddress, mintAmount, `${description} - 5`, 10, 'USD'],
     ]
 }
 

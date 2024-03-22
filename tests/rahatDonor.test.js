@@ -87,20 +87,25 @@ describe('RahatDonor', function () {
         expect(projectBalance).to.equal(mintAmount);
     });
 
-    it('Should mint tokens, approve project and update description', async function () {
+    it('Should mint tokens, approve project, update description, price and currency', async function () {
       const initialContractBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
       const mintAmount = 100n;
+      const price = 10;
+      const currency = 'USD';
       await rahatDonorContract
         .connect(admin)
         .registerProject(await elProjectContract.getAddress(), true);
 
         await rahatDonorContract
         .connect(admin)
-        ['mintTokenAndApprove(address, address, uint256, string)'](await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description');
+        ['mintTokenAndApproveDescription(address, address, uint256, string, uint256, string)'](await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description', price, currency);
 
       // Check if the project balance is updated
         const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
         expect(projectBalance).to.equal(initialContractBalance + mintAmount);
+
+      // Check if voucher price is updated
+        expect(await rahatTokenContract.price()).to.equal(10)
     });
 
     it('Should multicall mint tokens, approve project and update description', async function () {
@@ -109,7 +114,7 @@ describe('RahatDonor', function () {
 
       const multicallInfo = getRandomDonorData(await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description')
 
-      const multicallData = generateMultiCallData(rahatDonorContract, 'mintTokenAndApprove(address, address, uint256, string)', multicallInfo);
+      const multicallData = generateMultiCallData(rahatDonorContract, 'mintTokenAndApproveDescription(address, address, uint256, string, uint256, string)', multicallInfo);
       await rahatDonorContract.connect(admin).multicall(multicallData)
         const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
         expect(projectBalance).to.equal(initialContractBalance + 5n*mintAmount);

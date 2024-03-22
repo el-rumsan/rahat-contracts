@@ -13,25 +13,21 @@ import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771Context {
   uint8 private decimalPoints;
   string public description;
-  uint8 public price;
+  uint256 public price;
   string public currency;
 
   event UpdatedDescription(address updatedBy, string description);
-  event UpdatedPrice(string currency, uint8 price);
+  event UpdatedTokenParams(string currency, uint256 price);
 
   constructor(
     address _forwarder,
     string memory _name,
     string memory _symbol,
     address _admin,
-    uint8 _decimals,
-    _price,
-    _currency
+    uint8 _decimals
   ) ERC20(_name, _symbol) ERC2771Context(address(_forwarder)) {
     _addOwner(_admin);
     decimalPoints = _decimals;
-    price = _price;
-    currency = _currency;
   }
 
 
@@ -43,25 +39,22 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771
   ///@dev Update price and currency of token
   ///@param _currency Currency to which token will be change
   ///@param _price Price of currency 
-  function updatePrice(string _currency, uint8 _price) public OnlyOwner() {
-    price = _price,
-    currency = _currency,
-    emit UpdatedPrice(price, currency);
+  ///@param _price Voucher description
+  function updateTokenParams(string memory _currency, uint256 _price, string memory _description) public OnlyOwner() {
+    price = _price;
+    currency = _currency;
+    description = _description;
+    emit UpdatedTokenParams(currency, price);
   }
 
   ///@dev Mint x amount of ERC20 token to given address
   ///@param _address Address to which ERC20 token will be minted
   ///@param _amount Amount of token to be minted
-  function mint(address _address, uint256 _amount) public OnlyOwner returns (uint256) {
+  function mint(address _address, uint256 _amount) public override OnlyOwner returns (uint256) {
     _mint(_address, _amount);
     return _amount;
   }
 
-  function mint(address _address, uint256 _amount, string memory _description) public override OnlyOwner returns(uint256){
-    description = _description;
-    _mint(_address,_amount);
-    return _amount;
-  } 
 
   function burnFrom(address _account, uint256 _value) public override(ERC20Burnable, IRahatToken){
     super.burnFrom(_account,_value);

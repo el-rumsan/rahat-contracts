@@ -63,8 +63,8 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should mint the eye and referred tokens", async function(){
-            await rahatDonorContract['mintTokenAndApprove(address,address,uint256,string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses");
-            await rahatDonorContract['mintTokenAndApprove(address,address,uint256,string)'](await referredTokenContract.getAddress(),await elProjectContract.getAddress(),3000,"dscount voucher for referred token");
+            await rahatDonorContract['mintTokenAndApproveDescription(address,address,uint256,string, uint256, string)'](await eyeTokenContract.getAddress(),await elProjectContract.getAddress(),1000,"free voucher for eye and glasses", 10, "USD");
+            await rahatDonorContract['mintTokenAndApproveDescription(address,address,uint256,string, uint256, string)'](await referredTokenContract.getAddress(),await elProjectContract.getAddress(),3000,"dscount voucher for referred token",  10, "USD");
             const eyeTotalSupply = await eyeTokenContract.totalSupply();
             expect(Number(eyeTotalSupply)).to.equal(1000);
             expect(Number(await referredTokenContract.totalSupply())).to.equal(3000);  

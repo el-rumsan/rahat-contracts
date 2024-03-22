@@ -81,7 +81,9 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     address _projectAddress,
     uint256 _amount,
     // uint256 _treasuryId,
-    string memory _description
+    string memory _description,
+    uint256 _price,
+    string memory _currency
   ) public OnlyOwner {
     require(_token != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');
@@ -91,7 +93,8 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     // uint256 _totalDollar = tokenToDollarValue[1];
     // require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
     RahatToken token = RahatToken(_token);
-    token.mint(_projectAddress, _amount, _description);
+    token.mint(_projectAddress, _amount);
+    token.updateTokenParams(_currency, _price, _description);
     // token.approve(_projectAddress, _amount);
     IELProject(_projectAddress).increaseTokenBudget(_amount, _token);
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
