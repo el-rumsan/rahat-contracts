@@ -10,6 +10,7 @@ describe('RahatDonor', function () {
   let rahatDonorContract;
   let rahatTokenContract;
   let elProjectContract;
+  let referredTokenContract;
 
   before(async function () {
     const [deployerAddr, adminAddr, userAddr, projectAdr] = await ethers.getSigners();
@@ -36,6 +37,7 @@ describe('RahatDonor', function () {
         await rahatDonorContract.getAddress(),
         18,
       ]);
+      referredTokenContract = await ethers.deployContract('RahatToken', [await forwarderContract.getAddress(),'ReferredToken', 'REF', await rahatDonorContract.getAddress(), 1]);
 
       // Check if the RahatToken contract is deployed successfully
       expect(await rahatTokenContract.name()).to.equal('RahatToken');
@@ -90,7 +92,8 @@ describe('RahatDonor', function () {
     it('Should mint tokens, approve project, update description, price and currency', async function () {
       const initialContractBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
       const mintAmount = 100n;
-      const price = 10;
+      const priceFree = 10;
+      const priceReferral = 1;
       const currency = 'USD';
       await rahatDonorContract
         .connect(admin)
@@ -98,7 +101,7 @@ describe('RahatDonor', function () {
 
         await rahatDonorContract
         .connect(admin)
-        ['mintTokenAndApproveDescription(address, address, uint256, string, uint256, string)'](await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description', price, currency);
+        ['mintTokenAndApproveDescription(address, address, address, uint256, string, string, uint256, uint256, uint256, string)'](await rahatTokenContract.getAddress(), await referredTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description Free', 'New description Referred', priceFree, priceReferral, 3, currency);
 
       // Check if the project balance is updated
         const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
@@ -110,14 +113,19 @@ describe('RahatDonor', function () {
 
     it('Should multicall mint tokens, approve project and update description', async function () {
       const initialContractBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+      const initialReferredTokenBalance = await referredTokenContract.balanceOf(elProjectContract.getAddress());
       const mintAmount = 100n;
+      const referralLimit = 3n;
 
-      const multicallInfo = getRandomDonorData(await rahatTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, 'New description')
+      const multicallInfo = getRandomDonorData(await rahatTokenContract.getAddress(), await referredTokenContract.getAddress(), await elProjectContract.getAddress(), mintAmount, referralLimit, 'New description')
 
-      const multicallData = generateMultiCallData(rahatDonorContract, 'mintTokenAndApproveDescription(address, address, uint256, string, uint256, string)', multicallInfo);
+      const multicallData = generateMultiCallData(rahatDonorContract, 'mintTokenAndApproveDescription(address, address, address, uint256, string, string, uint256, uint256, uint256, string)', multicallInfo);
       await rahatDonorContract.connect(admin).multicall(multicallData)
         const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
+        const referralBalance = await referredTokenContract.balanceOf(elProjectContract.getAddress());
         expect(projectBalance).to.equal(initialContractBalance + 5n*mintAmount);
+        console.log(referralBalance)
+        expect(referralBalance).to.equal(initialReferredTokenBalance + 5n*referralLimit*mintAmount)
     });
 
   });
