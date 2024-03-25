@@ -66,9 +66,6 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     require(_projectAddress != address(0), 'approve address cannot be zero');
     require(_registeredProject[_projectAddress], 'project not registered');
     require(_amount > 0, 'amount cannot be zero');
-    // IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
-    // uint256 _totalDollar = tokenToDollarValue[1];
-    // require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
     RahatToken token = RahatToken(_token);
     token.mint(_projectAddress, _amount);
     token.approve(_projectAddress, _amount);
@@ -77,27 +74,41 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
   }
 
   function mintTokenAndApproveDescription(
-    address _token,
+    address _tokenFree,
+    address _tokenReferral,
     address _projectAddress,
-    uint256 _amount,
-    // uint256 _treasuryId,
-    string memory _description,
-    uint256 _price,
+    uint256 _amountFree,
+    string memory _descriptionFree,
+    string memory _descriptionReferral,
+    uint256 _priceFree,
+    uint256 _priceReferral,
+    uint256 _referralLimit,
     string memory _currency
   ) public OnlyOwner {
-    require(_token != address(0), 'token address cannot be zero');
+    require(_tokenFree != address(0), 'token address cannot be zero');
+    require(_tokenReferral != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');
     require(_registeredProject[_projectAddress], 'project not registered');
-    require(_amount > 0, 'amount cannot be zero');
-    // IRahatTreasury.Treasury  memory _treasury= RahatTreasury.checkBudget(_treasuryId);
-    // uint256 _totalDollar = tokenToDollarValue[1];
-    // require(_treasury.budget >= _totalDollar * _amount,"budget amount exceed");
+    require(_amountFree > 0, 'amount cannot be zero');
+    require(mintAndUpdateParams(_tokenFree, _projectAddress, _amountFree, _descriptionFree, _priceFree, _currency), 'amount cannot be zero');
+    uint256 freeReferral = _amountFree * _referralLimit;
+    require(mintAndUpdateParams(_tokenReferral, _projectAddress, freeReferral, _descriptionReferral, _priceReferral, _currency), "");
+  }
+
+  function mintAndUpdateParams(address _token,
+    address _projectAddress,
+    uint256 _amount,
+    string memory _description,
+    uint256 _price,
+    string memory _currency) private returns (bool){
     RahatToken token = RahatToken(_token);
     token.mint(_projectAddress, _amount);
     token.updateTokenParams(_currency, _price, _description);
-    // token.approve(_projectAddress, _amount);
+
     IELProject(_projectAddress).increaseTokenBudget(_amount, _token);
     emit TokenMintedAndApproved(_token, _projectAddress, _amount);
+
+    return true;
   }
 
   function addTokenOwner(address _token, address _ownerAddress) public OnlyOwner {

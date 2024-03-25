@@ -384,6 +384,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _vendorAddress address of vendor
     function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress) onlyOpen() public {
         require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
+        // Transfer From instead of burn from
         IRahatToken(_tokenAddress).burnFrom(_vendorAddress,_amount);
         emit TokenRedeem(_vendorAddress,_tokenAddress,_amount);
     }
