@@ -160,17 +160,16 @@ describe('------ ElProjectFlow Tests ------', function () {
         })
 
         it("Should transfer claimed token from vendor to project contract", async function(){
-            const projectBalanceBefore = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
-            const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),3]);
+            const projectBalanceBefore = await eyeTokenContract.balanceOf(deployer.address);
+            const request = await getMetaTxRequest(ven1,forwarderContract,eyeTokenContract, 'approve',[await elProjectContract.getAddress(),1]);
             const tx = await forwarderContract.execute(request);
             await tx.wait();
-            await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address);
-            const projectBalanceAfter = await eyeTokenContract.balanceOf(await elProjectContract.getAddress());
-
+            await elProjectContract.redeemTokenByVendor(await eyeTokenContract.getAddress(),1,ven1.address, deployer.address);
+            const projectBalanceAfter = await eyeTokenContract.balanceOf(deployer.address);
+            expect(projectBalanceAfter).to.equal(projectBalanceBefore + 1n)
         })
 
         // Cases for revert
-
         // Revert if non admin calls only admin function
         it("Should revert if non-admin calls only Admin Functions", async function(){
 
@@ -364,7 +363,8 @@ describe('------ ElProjectFlow Tests ------', function () {
                 elProjectContract.redeemTokenByVendor(
                   await eyeTokenContract.getAddress(),
                   1000,
-                  ven1
+                  ven1,
+                  deployer
                 )
             ).to.be.revertedWith('Insufficient balance');
         });

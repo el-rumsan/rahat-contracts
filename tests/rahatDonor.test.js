@@ -11,6 +11,7 @@ describe('RahatDonor', function () {
   let rahatTokenContract;
   let elProjectContract;
   let referredTokenContract;
+  let eyeTokenContract;
 
   before(async function () {
     const [deployerAddr, adminAddr, userAddr, projectAdr] = await ethers.getSigners();
@@ -48,7 +49,7 @@ describe('RahatDonor', function () {
     it('Should deploy all required contracts', async function () {
       let rahatClaimContract = await ethers.deployContract('RahatClaim');
       let forwarderContract = await ethers.deployContract('ERC2771Forwarder', ['Rumsan Forwarder']);
-      let eyeTokenContract = await ethers.deployContract('RahatToken', [
+      eyeTokenContract = await ethers.deployContract('RahatToken', [
         await forwarderContract.getAddress(),
         'EyeToken',
         'EYE',
@@ -70,23 +71,30 @@ describe('RahatDonor', function () {
 
   describe('Token Minting and Approval', function () {
     it('Should mint tokens and approve project', async function () {
-      const mintAmount = 100;
+      const mintAmount = 100n;
       await rahatDonorContract
         .connect(admin)
         .registerProject(await elProjectContract.getAddress(), true);
+
+        const projectBalanceInitial = await rahatTokenContract.balanceOf(await elProjectContract.getAddress());
+        console.log("project balance initial", projectBalanceInitial);
 
       // Mint tokens and approve project
       await rahatDonorContract
         .connect(admin)
         .mintTokenAndApprove(
           await rahatTokenContract.getAddress(),
+          await referredTokenContract.getAddress(),
           await elProjectContract.getAddress(),
-          mintAmount
+          mintAmount,
+          3
         );
 
       // Check if the project balance is updated
-        const projectBalance = await rahatTokenContract.balanceOf(elProjectContract.getAddress());
-        expect(projectBalance).to.equal(mintAmount);
+        const freeVoucherBalance = await rahatTokenContract.balanceOf(await elProjectContract.getAddress());
+        const referredVoucherBalance = await referredTokenContract.balanceOf(await elProjectContract.getAddress());
+        expect(freeVoucherBalance).to.equal(mintAmount);
+        expect(referredVoucherBalance).to.equal(mintAmount * 3n)
     });
 
     it('Should mint tokens, approve project, update description, price and currency', async function () {

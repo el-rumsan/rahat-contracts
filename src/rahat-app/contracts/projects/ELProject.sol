@@ -142,7 +142,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _admin address of the admin
     ///@param _status boolean value for admin role
     ///@dev can only be called by project admin when project is open
-    function updateAdmin(address _admin,bool _status) public onlyOpen() onlyAdmin(msg.sender){
+    function updateAdmin(address _admin, bool _status) public onlyOpen() onlyAdmin(msg.sender){
         _updateAdmin(_admin,_status);
     }
 
@@ -382,19 +382,17 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress voucher address
     ///@param _amount amount of voucher to redeem
     ///@param _vendorAddress address of vendor
-    function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress) onlyOpen() public {
+    function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress, address _adminAddress) onlyOpen() public {
         require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
-        // Transfer From instead of burn from
-        IRahatToken(_tokenAddress).burnFrom(_vendorAddress,_amount);
+        require(checkAdminStatus(_adminAddress), "Not admin address");
+        IERC20(_tokenAddress).transferFrom(_vendorAddress, _adminAddress, _amount);
         emit TokenRedeem(_vendorAddress,_tokenAddress,_amount);
     }
-
 
     // #endregion
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == IID_RAHAT_PROJECT;
     }
-
 
     /// @dev overriding the method to ERC2771Context
     function _msgSender()
