@@ -40,7 +40,7 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771
   ///@param _currency Currency to which token will be change
   ///@param _price Price of currency 
   ///@param _price Voucher description
-  function updateTokenParams(string memory _currency, uint256 _price, string memory _description) public OnlyOwner() {
+  function updateTokenParams(string memory _currency, uint256 _price, string memory _description) public {
     price = _price;
     currency = _currency;
     description = _description;
@@ -50,7 +50,7 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771
   ///@dev Mint x amount of ERC20 token to given address
   ///@param _address Address to which ERC20 token will be minted
   ///@param _amount Amount of token to be minted
-  function mint(address _address, uint256 _amount) public override OnlyOwner returns (uint256) {
+  function mint(address _address, uint256 _amount) public override  returns (uint256) {
     _mint(_address, _amount);
     return _amount;
   }
@@ -60,7 +60,7 @@ contract RahatToken is AbstractOwner, ERC20, ERC20Burnable, IRahatToken, ERC2771
     super.burnFrom(_account,_value);
   }
 
-  function updateDescription(string memory _description) public OnlyOwner(){
+  function updateDescription(string memory _description) public {
     description = _description;
     emit UpdatedDescription(msg.sender, _description);
   }

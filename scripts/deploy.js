@@ -37,8 +37,8 @@ async function main(){
     // Uncomment next 3 lines to only update admin
 
     // const elProject = await ethers.getContractFactory('ELProject')
-    // const elContract = await elProject.attach('0x34c4802EEDb16632898F7ce85a76703560Ee15B3')
-    // await elContract.updateAdmin('0xAC6bFaf10e89202c293dD795eCe180BBf1430d7B',true);
+    // const elContract = await elProject.attach('0xaC29e7A5b6A4657a4B98E43F3b9517152867c896')
+    // await elContract.updateAdmin('0xBc7d88DE6057265f602942c5b189dCcFAf8D2D9e',true);
 
     console.log("---deploying rahat donor------")
     const donorContract = await ethers.deployContract('RahatDonor',[deployer.address])

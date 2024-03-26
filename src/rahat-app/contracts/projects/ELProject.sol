@@ -127,13 +127,13 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to add beneficiaries
     ///@param _address address of the beneficiary
     ///@dev can only be called by project admin when project is open
-    function addBeneficiary(address _address ) public onlyOpen() onlyAdmin(msg.sender){
+    function addBeneficiary(address _address ) public {
         _addBeneficiary(_address);
     }
     ///@notice function to remove beneficiaries
     ///@param _address address of the beneficiary to be removed
     ///@dev can only be called by project admin when project is open
-    function removeBeneficiary(address _address) public onlyOpen() onlyAdmin(msg.sender) {
+    function removeBeneficiary(address _address) public  {
         _removeBeneficiary(_address);
     }
 
@@ -142,7 +142,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _admin address of the admin
     ///@param _status boolean value for admin role
     ///@dev can only be called by project admin when project is open
-    function updateAdmin(address _admin, bool _status) public onlyOpen() onlyAdmin(msg.sender){
+    function updateAdmin(address _admin, bool _status) public  {
         _updateAdmin(_admin,_status);
     }
 
@@ -150,7 +150,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _address address of the vendor
     ///@param _status boolean value for vendor role
     ///@dev can only be called by project admin when project is open
-    function updateVendor(address _address, bool _status) public onlyOpen() onlyAdmin(msg.sender){
+    function updateVendor(address _address, bool _status) public  {
         _updateVendorStatus(_address, _status);
     }
 
@@ -159,7 +159,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _benAddress address of referral beneficairy(referral- one referring the new beneficairy)
     ///@param _vendorAddress address of referral vendor
     ///@dev can only be called by project vendors when project is open
-    function addReferredBeneficiaries(address _account, address _benAddress, address _vendorAddress) public onlyOpen(){
+    function addReferredBeneficiaries(address _account, address _benAddress, address _vendorAddress) public {
         require(_beneficiaries.contains(_benAddress),'referrer ben not registered');
         require(checkVendorStatus(_vendorAddress),'vendor not approved');
         require(beneficiaryReferredByBeneficiary[_benAddress] <= referralLimit,'referral:limit hit');
@@ -177,7 +177,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to remove referred beneficiaries
     ///@param _account address of the beneficiary
     ///@dev can only be called by project admin when project is open
-    function removeReferredBeneficiaries(address _account) public onlyOpen() onlyAdmin(msg.sender) {
+    function removeReferredBeneficiaries(address _account) public   {
         require(_referredBeneficiaries.contains(_account),'referrer ben not registered');
         referredBenficiaries[_account] = ReferredBeneficiaries({
             account:address(0),
@@ -191,7 +191,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     /// @notice function to assign free voucher/claims to beneficiaries
     ///@param _claimerAddress address of beneficiaires to assign claims
     ///@dev can only be called by project admin when project is open and voucher should be registered to project
-    function assignClaims(address _claimerAddress) public override onlyOpen() onlyRegisteredToken(defaultToken) onlyAdmin(msg.sender){
+    function assignClaims(address _claimerAddress) public override   {
         _addBeneficiary(_claimerAddress);
         _assignClaims(_claimerAddress, defaultToken,eyeVoucherAssigned,msg.sender); 
         eyeVoucherAssigned++;
@@ -204,7 +204,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _referralVendor address of referral vendor
     ///@param _refereedToken address of referred voucher
     ///@dev can only be called by project vendors when project is open and voucher should be registered to project
-    function assignRefereedClaims(address _claimerAddress,address _referralben, address _referralVendor,address _refereedToken) public override onlyOpen() onlyRegisteredToken(_refereedToken){  
+    function assignRefereedClaims(address _claimerAddress,address _referralben, address _referralVendor,address _refereedToken) public override  {  
         require(checkVendorStatus(_msgSender()),'vendor not approved');
         if(!_referredBeneficiaries.contains(_claimerAddress)) addReferredBeneficiaries(_claimerAddress,_referralben,_referralVendor);  
         // require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
@@ -215,7 +215,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     ///@notice function to revert unclaimed vouchers
     ///@param _claimerAddress address of beneficiaires to revert claim
-    function revertedClaims(address _claimerAddress) public onlyOpen() onlyRegisteredToken(defaultToken){
+    function revertedClaims(address _claimerAddress) public  {
         require(beneficiaryEyeVoucher[_claimerAddress] == defaultToken, "Token not assigned");
         eyeVoucherReverted++;
         emit ClaimRevert(_claimerAddress, defaultToken);
@@ -224,7 +224,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to revert unclaimed vouchers of other tokens
     ///@param _claimerAddress address of beneficiaires to revert claim
     ///@param _refereedToken address of token to be reverted
-    function revertedRefereedClaims(address _claimerAddress,address _refereedToken) public onlyOpen() onlyRegisteredToken(_refereedToken){        
+    function revertedRefereedClaims(address _claimerAddress,address _refereedToken) public  {        
         require(beneficiaryReferredVoucher[_claimerAddress] == _refereedToken,'Token not assigned');
         referredVoucherAssigned++;
         emit ClaimRevert(_claimerAddress, _refereedToken);
@@ -245,7 +245,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to request free voucher claim process
     ///@param _benAddress address of beneficiary
     ///@dev can be called only when project is open
-    function requestTokenFromBeneficiary(address _benAddress) public onlyOpen() override returns(uint256 requestId){
+    function requestTokenFromBeneficiary(address _benAddress) public  override returns(uint256 requestId){
         require(beneficiaryEyeVoucher[_benAddress] == defaultToken,'eye voucher not assigned');
         requestId = requestTokenFromBeneficiary(_benAddress, defaultToken,otpServerAddress,_msgSender());
     }
@@ -254,7 +254,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _benAddress address of beneficiary
     ///@param _tokenAddress address of referred voucher
     ///@dev can be called only when project is open
-    function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override onlyOpen() returns(uint256 requestId){
+    function requestReferredTokenFromBeneficiary(address _benAddress, address _tokenAddress) public override  returns(uint256 requestId){
         require(beneficiaryReferredVoucher[_benAddress] == _tokenAddress,'referred voucher not assigned');
         requestId = requestTokenFromBeneficiary(_benAddress, _tokenAddress,otpServerAddress,_msgSender());
     }
@@ -264,7 +264,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress address of voucher
     ///@param _otpServer address responsible for otp
     ///@dev can be called only when project is open
-    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer,address _vendor) internal  onlyOpen() returns(uint256 requestId) {
+    function requestTokenFromBeneficiary(address _benAddress, address _tokenAddress, address _otpServer,address _vendor) internal   returns(uint256 requestId) {
         require(otpServerAddress != address(0), 'invalid otp-server');
         require(!beneficiaryClaimStatus[_benAddress][_tokenAddress], 'Voucher already claimed');
         //need to check total budget
@@ -281,7 +281,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to process token after recieving otp. This is the last step for beneficiary during voucher claim process
     ///@param _benAddress address of the beneficiary
     ///@param _otp otp received by beneficiary
-    function processTokenRequest(address _benAddress, string memory _otp)onlyOpen() OnlyVendor() public{
+    function processTokenRequest(address _benAddress, string memory _otp)  public{
         IRahatClaim.Claim memory _claim = RahatClaim.processClaim(
             tokenRequestIds[_msgSender()][_benAddress],
             _otp
@@ -293,7 +293,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _amount amount to increase the budget
     ///@param _tokenAddress address of the voucher to increase budget
     ///@dev can only be called by admin.Mainly called during minting of vouchers
-    function increaseTokenBudget(uint256 _amount, address _tokenAddress) onlyOpen() onlyAdmin(msg.sender) public override{
+    function increaseTokenBudget(uint256 _amount, address _tokenAddress)   public override{
         uint256 budget = tokenBudget(_tokenAddress);
         require(IERC20(_tokenAddress).totalSupply()>= budget+_amount, 'Greater than total supply');
         _tokenBudgetIncrease(_tokenAddress, _amount);
@@ -323,7 +323,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@notice function to update the otp server
     ///@param _address new address of otp server
     ///@dev only admin can change the otp server address when project is open
-    function updateOtpServer(address _address) onlyOpen() public onlyAdmin(msg.sender) {
+    function updateOtpServer(address _address)  public  {
         require(_address != address(0), 'invalid address');
         require(_address != address(this), 'cannot be contract address');
         require(_address != address(otpServerAddress), 'no change');
@@ -333,7 +333,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     ///@notice function to close project
     ///@dev can only be called by admin.
-    function closeProject() public onlyOpen() onlyAdmin(msg.sender) {
+    function closeProject() public   {
         close();
     }
 
@@ -382,7 +382,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _tokenAddress voucher address
     ///@param _amount amount of voucher to redeem
     ///@param _vendorAddress address of vendor
-    function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress, address _adminAddress) onlyOpen() public {
+    function redeemTokenByVendor(address _tokenAddress, uint256 _amount,address _vendorAddress, address _adminAddress)  public {
         require(IERC20(_tokenAddress).balanceOf(_vendorAddress) >= _amount,'Insufficient balance' );
         require(checkAdminStatus(_adminAddress), "Not admin address");
         IERC20(_tokenAddress).transferFrom(_vendorAddress, _adminAddress, _amount);
@@ -423,8 +423,8 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
         return ERC2771Context._contextSuffixLength();
     }
 
-    modifier OnlyVendor() {
-    require(checkVendorStatus(_msgSender()), 'Only vendor can execute this transaction');
-    _;
-  }
+//     modifier  {
+//     require(checkVendorStatus(_msgSender()), 'Only vendor can execute this transaction');
+//     _;
+//   }
 }

@@ -41,14 +41,14 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
   //   string memory _name,
   //   string memory _symbol,
   //   uint8 decimals
-  // ) public OnlyOwner returns (address) {
+  // ) public  returns (address) {
   //   RahatToken _token = new RahatToken(_name, _symbol, address(this), decimals);
   //   address _tokenAddress = address(_token);
   //   emit TokenCreated(_tokenAddress);
   //   return _tokenAddress;
   // }
 
-  function mintToken(address _token, uint256 _amount) public OnlyOwner {
+  function mintToken(address _token, uint256 _amount) public  {
     RahatToken(_token).mint(address(this), _amount);
   }
 
@@ -92,7 +92,7 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     uint256 _priceReferral,
     uint256 _referralLimit,
     string memory _currency
-  ) public OnlyOwner {
+  ) public  {
     require(_tokenFree != address(0), 'token address cannot be zero');
     require(_tokenReferral != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');
@@ -119,11 +119,11 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     return true;
   }
 
-  function addTokenOwner(address _token, address _ownerAddress) public OnlyOwner {
+  function addTokenOwner(address _token, address _ownerAddress) public  {
     RahatToken(_token).addOwner(_ownerAddress);
   }
 
-  function registerProject(address _projectAddress, bool status) public OnlyOwner {
+  function registerProject(address _projectAddress, bool status) public  {
     _registeredProject[_projectAddress] = status;
   }
 
