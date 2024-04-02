@@ -66,6 +66,8 @@ describe('------ ElProjectFlow Tests ------', function () {
             await rahatDonorContract['mintTokenAndApproveDescription(address, address, address, uint256, string, string, uint256, uint256, uint256, string)'](await eyeTokenContract.getAddress(), await referredTokenContract.getAddress(), await elProjectContract.getAddress(),1000,"free voucher for eye and glasses", "discount voucher for referred token", 10, 1, 3, "USD");
             // await rahatDonorContract['mintTokenAndApproveDescription(address, address, address, uint256, string, string, uint256, uint256, uint256, string)'](await referredTokenContract.getAddress(),await elProjectContract.getAddress(),3000,"dscount voucher for referred token",  10, "USD");
             const eyeTotalSupply = await eyeTokenContract.totalSupply();
+            const hash = await rahatClaimContract.findHash("9670");
+            console.log("hash",hash)
             console.log(await referredTokenContract.totalSupply())
             expect(Number(eyeTotalSupply)).to.equal(1000);
             expect(Number(await referredTokenContract.totalSupply())).to.equal(3000);  
@@ -157,6 +159,11 @@ describe('------ ElProjectFlow Tests ------', function () {
             const eyeTokenRedeemed = await elProjectContract.eyeVoucherRedeemedByVendor(ven1.address);
             expect(Number(eyeTokenRedeemed)).to.equal(1);
             // await elProjectContract.approveProject(await eyeTokenContract.getAddress(),1);
+        })
+
+        it("Should fetch the beneficiary data", async function (){
+            const data = await elProjectContract.getBeneficiaryVoucherDetail(ben1.address);
+            console.log(data);
         })
 
         it("Should transfer claimed token from vendor to project contract", async function(){

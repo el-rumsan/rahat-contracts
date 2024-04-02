@@ -93,7 +93,7 @@ async function main(){
     console.log('verifying referral voucher')
     await verify(referralVoucherAddress,[forwarderAddress,'Refeeral Voucher','Referral',donorAddress,1]);
     console.log('verifying el project')
-    await verify(elProjectAddress,['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress,deployer.address,forwarderAddress,3]);
+    await verify(elProjectAddress,['ELProject',eyeVoucherAddress,referralVoucherAddress,claimAddress, process.env.OTP_SERVER_ADDRESS,forwarderAddress,3]);
     console.log("verification completed")
 
 }

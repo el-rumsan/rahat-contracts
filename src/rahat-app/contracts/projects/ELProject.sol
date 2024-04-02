@@ -161,7 +161,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@dev can only be called by project vendors when project is open
     function addReferredBeneficiaries(address _account, address _benAddress, address _vendorAddress) public {
         require(_beneficiaries.contains(_benAddress),'referrer ben not registered');
-        require(checkVendorStatus(_vendorAddress),'vendor not approved');
+        // require(checkVendorStatus(_vendorAddress),'vendor not approved');
         require(beneficiaryReferredByBeneficiary[_benAddress] <= referralLimit,'referral:limit hit');
         referredBenficiaries[_account] = ReferredBeneficiaries({
             account:_account,
@@ -205,7 +205,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
     ///@param _refereedToken address of referred voucher
     ///@dev can only be called by project vendors when project is open and voucher should be registered to project
     function assignRefereedClaims(address _claimerAddress,address _referralben, address _referralVendor,address _refereedToken) public override  {  
-        require(checkVendorStatus(_msgSender()),'vendor not approved');
+        // require(checkVendorStatus(_msgSender()),'vendor not approved');
         if(!_referredBeneficiaries.contains(_claimerAddress)) addReferredBeneficiaries(_claimerAddress,_referralben,_referralVendor);  
         // require(_referredBeneficiaries.contains(_claimerAddress),'claimer not referred');
         _assignClaims(_claimerAddress,_refereedToken,referredVoucherAssigned,msg.sender);
@@ -387,6 +387,21 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
         require(checkAdminStatus(_adminAddress), "Not admin address");
         IERC20(_tokenAddress).transferFrom(_vendorAddress, _adminAddress, _amount);
         emit TokenRedeem(_vendorAddress,_tokenAddress,_amount);
+    }
+
+    ///@notice function to get the beneficiary voucher
+    ///@param _benAddress address of the beneficiary to get the voucher details
+    ///@return BeneficiaryVoucherDetails struct storing the beneficiary voucher details
+    ///@dev getter function to get all voucher details of beneficiary
+    function getBeneficiaryVoucherDetail(address _benAddress) public view returns(BeneficiaryVoucherDetails memory beneficiaryVoucherDetails){
+         beneficiaryVoucherDetails = BeneficiaryVoucherDetails({
+         freeVoucherAddress: beneficiaryEyeVoucher[_benAddress],
+         referredVoucherAddress: beneficiaryReferredVoucher[_benAddress],
+         freeVoucherClaimStatus: beneficiaryClaimStatus[_benAddress][defaultToken],
+         referredVoucherClaimStatus: beneficiaryClaimStatus[_benAddress][referredToken]
+        });
+        return beneficiaryVoucherDetails;
+        
     }
 
     // #endregion
