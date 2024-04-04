@@ -3,9 +3,8 @@ pragma solidity 0.8.23;
 
 //ERC20 Tokens
 import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol';
-
 import '../interfaces/IRahatToken.sol';
-import '../libraries/AbstractOwner.sol';
+import '@rahataid/contracts/src/rahat-app/libraries/AbstractOwner.sol';
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
 

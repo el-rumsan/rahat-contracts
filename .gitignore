@@ -6,3 +6,4 @@ cache
 hardhat_build/
 play/
 .env
+.npmrc

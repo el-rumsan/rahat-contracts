@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 import './RahatToken.sol';
-import '../libraries/AbstractTokenActions.sol';
+import '@rahataid/contracts/src/rahat-app/libraries/AbstractTokenActions.sol';
 import '../interfaces/IELProject.sol';
 import '../interfaces/IRahatDonor.sol';
 import '../interfaces/IRahatTreasury.sol';

@@ -391,7 +391,7 @@ contract ELProject is AbstractProject, IELProject, ERC2771Context {
 
     ///@notice function to get the beneficiary voucher
     ///@param _benAddress address of the beneficiary to get the voucher details
-    ///@return BeneficiaryVoucherDetails struct storing the beneficiary voucher details
+    ///@return beneficiaryVoucherDetails struct storing the beneficiary voucher details
     ///@dev getter function to get all voucher details of beneficiary
     function getBeneficiaryVoucherDetail(address _benAddress) public view returns(BeneficiaryVoucherDetails memory beneficiaryVoucherDetails){
          beneficiaryVoucherDetails = BeneficiaryVoucherDetails({

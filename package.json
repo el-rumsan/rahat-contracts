@@ -9,7 +9,8 @@
     "coverage": "hardhat coverage",
     "test": "hardhat test",
     "prettier": "prettier --write 'src/contracts/**/*.sol'",
-    "deploy:contracts": "hardhat run scripts/deploy.js --network polygonMumbai"
+    "deploy:contracts": "hardhat run scripts/deploy.js --network polygonMumbai",
+    "deploy:mumbai": "hardhat run scripts/deploy.js --network polygonMumbai"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "@atixlabs/hardhat-time-n-mine": "^0.0.5",
+    "@rahataid/contracts": "^0.0.1",
     "dotenv": "^16.3.1",
     "hardhat-gas-reporter": "^1.0.9",
     "solidity-docgen": "0.6.0-beta.36"
