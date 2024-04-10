@@ -58,7 +58,7 @@ contract RahatDonor is AbstractTokenActions, ERC165 {
     address _projectAddress,
     uint256 _amountFree,
     uint256 _referralLimit
-  ) public OnlyOwner {
+  ) public  {
     require(_tokenFree != address(0), 'token address cannot be zero');
     require(_tokenReferral != address(0), 'token address cannot be zero');
     require(_projectAddress != address(0), 'approve address cannot be zero');

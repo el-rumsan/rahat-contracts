@@ -28,6 +28,14 @@ interface IELProject is IERC165 {
     uint256 beneficiaryReferred;
   }
 
+  struct BeneficiaryVoucherDetails{
+    address freeVoucherAddress;
+    address referredVoucherAddress;
+    bool freeVoucherClaimStatus;
+    bool referredVoucherClaimStatus;
+
+  }
+
   function addBeneficiary(address _address) external;
 
   function removeBeneficiary(address _address) external;
